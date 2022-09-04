@@ -1,24 +1,31 @@
 use {
   crate::{
     arguments::Arguments,
+    extractor::Extractor,
     model::{Course, Entry},
     options::Options,
-    scraper::Scraper,
     select::Select,
+    server::Server,
     subcommand::Subcommand,
   },
   anyhow::anyhow,
+  axum::{routing::get, Router},
+  axum_server::Handle,
   clap::Parser,
+  http::Method,
+  scraper::{ElementRef, Html, Selector},
   serde::Serialize,
-  std::{cell::Cell, fs, path::PathBuf, process},
-  web_scraper::{ElementRef, Html, Selector},
+  std::{fs, net::SocketAddr, path::PathBuf, process},
+  tokio::runtime::Runtime,
+  tower_http::cors::{Any, CorsLayer},
 };
 
 mod arguments;
+mod extractor;
 mod model;
 mod options;
-mod scraper;
 mod select;
+mod server;
 mod subcommand;
 
 type Result<T = (), E = anyhow::Error> = std::result::Result<T, E>;

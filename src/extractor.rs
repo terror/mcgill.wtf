@@ -1,27 +1,21 @@
 use super::*;
 
-#[derive(Debug)]
-pub(crate) struct Scraper<'a> {
-  base: &'a str,
-  page: Cell<usize>,
-}
+const BASE_URL: &str = "https://www.mcgill.ca/study/2022-2023/courses/search";
 
-impl<'a> Scraper<'a> {
-  pub(crate) fn new() -> Scraper<'a> {
-    Self {
-      base: "https://www.mcgill.ca/study/2022-2023/courses/search",
-      page: Cell::new(0),
-    }
-  }
+#[derive(Debug, Parser)]
+pub(crate) struct Extractor;
 
+impl Extractor {
   pub(crate) fn run(&self) -> Result<Vec<Course>> {
     log::info!("Running scraper...");
 
     let mut entries = Vec::new();
 
-    while let Some(page_entries) = self.page(self.page.get())? {
+    let mut page = 0;
+
+    while let Some(page_entries) = self.page(page)? {
       entries.extend(page_entries);
-      self.page.set(self.page.get() + 1);
+      page += 1;
     }
 
     Ok(
@@ -35,62 +29,56 @@ impl<'a> Scraper<'a> {
   fn page(&self, page: usize) -> Result<Option<Vec<Entry>>> {
     log::info!("Fetching html on page: {page}...");
 
-    let page = Html::parse_fragment(
-      &reqwest::blocking::get(format!(
-        "{}?page={}",
-        self.base,
-        self.page.get()
-      ))?
-      .text()?,
+    let html = Html::parse_fragment(
+      &reqwest::blocking::get(format!("{}?page={}", BASE_URL, page))?.text()?,
     );
 
-    let content = page
+    if let Some(content) = html
       .root_element()
-      .select_optional("div[class='view-content']")?;
+      .select_optional("div[class='view-content']")?
+    {
+      log::info!("Scraping found content on page: {page}...");
 
-    if content.is_none() {
-      log::info!("Did not find any content on page {}", self.page.get());
-      return Ok(None);
+      let entries = content
+        .select_many("div[class~='views-row']")?
+        .iter()
+        .map(|entry| Entry {
+          url: entry
+            .select_single("div[class~='views-field-field-course-title-long']")
+            .unwrap()
+            .select_single("a")
+            .unwrap()
+            .value()
+            .attr("href")
+            .unwrap()
+            .to_string(),
+          level: entry
+            .select_single("span[class~='views-field-level']")
+            .unwrap()
+            .select_single("span[class='field-content']")
+            .unwrap()
+            .inner_html(),
+          terms: entry
+            .select_single("span[class~='views-field-terms']")
+            .unwrap()
+            .select_single("span[class='field-content']")
+            .unwrap()
+            .inner_html()
+            .split(", ")
+            .map(|s| s.to_owned())
+            .collect::<Vec<String>>(),
+        })
+        .filter(|entry| !entry.terms.contains(&String::from("Not Offered")))
+        .collect::<Vec<Entry>>();
+
+      log::info!("Scraped entries on page {}: {:?}", page, entries);
+
+      return Ok(Some(entries));
     }
 
-    log::info!("Scraping found content on page: {}...", self.page.get());
+    log::info!("Did not find any content on page {}", page);
 
-    let entries = content
-      .unwrap()
-      .select_many("div[class~='views-row']")?
-      .iter()
-      .map(|entry| Entry {
-        url: entry
-          .select_single("div[class~='views-field-field-course-title-long']")
-          .unwrap()
-          .select_single("a")
-          .unwrap()
-          .value()
-          .attr("href")
-          .unwrap()
-          .to_string(),
-        level: entry
-          .select_single("span[class~='views-field-level']")
-          .unwrap()
-          .select_single("span[class='field-content']")
-          .unwrap()
-          .inner_html(),
-        terms: entry
-          .select_single("span[class~='views-field-terms']")
-          .unwrap()
-          .select_single("span[class='field-content']")
-          .unwrap()
-          .inner_html()
-          .split(", ")
-          .map(|s| s.to_owned())
-          .collect::<Vec<String>>(),
-      })
-      .filter(|entry| !entry.terms.contains(&String::from("Not Offered")))
-      .collect::<Vec<Entry>>();
-
-    log::info!("Scraped entries on page {}: {:?}", self.page.get(), entries);
-
-    Ok(Some(entries))
+    Ok(None)
   }
 
   fn course(&self, entry: Entry) -> Result<Course> {
@@ -144,8 +132,7 @@ impl<'a> Scraper<'a> {
           .select_single("a")?
           .value()
           .attr("href")
-          .unwrap()
-          .to_string()
+          .ok_or_else(|| anyhow!("Failed to get attribute"))?
       ),
       description: content
         .select_single("div[class='content']")?

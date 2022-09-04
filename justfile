@@ -15,6 +15,9 @@ clippy:
 download:
   RUST_LOG=info just run download && prettier --write data.json
 
+serve:
+  RUST_LOG=info just run serve
+
 fmt:
   cargo +nightly fmt
 
