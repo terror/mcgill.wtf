@@ -78,9 +78,12 @@ impl<'a> Scraper<'a> {
           .unwrap()
           .select_single("span[class='field-content']")
           .unwrap()
-          .inner_html(),
+          .inner_html()
+          .split(", ")
+          .map(|s| s.to_owned())
+          .collect::<Vec<String>>(),
       })
-      .filter(|entry| entry.terms != "Not Offered")
+      .filter(|entry| !entry.terms.contains(&String::from("Not Offered")))
       .collect::<Vec<Entry>>();
 
     log::info!("Fetched entries on page {}: {:?}", self.page.get(), entries);
@@ -94,11 +97,25 @@ impl<'a> Scraper<'a> {
         .text()?,
     );
 
-    let title = body
+    let full_title = body
       .select(&Selector::parse("h1[id='page-title']").unwrap())
       .next()
       .unwrap()
-      .inner_html();
+      .inner_html()
+      .trim()
+      .to_owned();
+
+    let title = full_title
+      .split(' ')
+      .skip(2)
+      .collect::<Vec<&str>>()
+      .join(" ");
+
+    let code = full_title
+      .split(' ')
+      .take(2)
+      .collect::<Vec<&str>>()
+      .join(" ");
 
     let content = body
       .select(
@@ -115,36 +132,27 @@ impl<'a> Scraper<'a> {
       .split(' ')
       .skip(2)
       .collect::<Vec<&str>>()
-      .join(" ")
-      .trim()
-      .to_owned();
+      .join(" ");
 
     let department = content
-      .select(&Selector::parse("div[class='meta']").unwrap())
-      .next()
-      .unwrap()
-      .select(&Selector::parse("p").unwrap())
-      .next()
-      .unwrap()
+      .select_single("div[class='meta']")?
+      .select_single("p")?
       .inner_html()
       .trim()
       .to_owned();
 
     let instructors = content
-      .select(&Selector::parse("p[class='catalog-instructors']").unwrap())
-      .next()
-      .unwrap()
+      .select_single("p[class='catalog-instructors']")?
       .inner_html()
       .trim()
       .split(' ')
       .skip(1)
       .collect::<Vec<&str>>()
-      .join(" ")
-      .trim()
-      .to_owned();
+      .join(" ");
 
     let course = Course {
-      title: title.trim().to_owned(),
+      title,
+      code,
       level: entry.level,
       terms: entry.terms,
       description,
