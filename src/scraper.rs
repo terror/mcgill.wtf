@@ -33,7 +33,7 @@ impl<'a> Scraper<'a> {
   }
 
   fn page(&self, page: usize) -> Result<Option<Vec<Entry>>> {
-    log::info!("Fetching results on page: {page}...");
+    log::info!("Fetching html on page: {page}...");
 
     let body = Html::parse_fragment(
       &reqwest::blocking::get(format!(
@@ -49,10 +49,11 @@ impl<'a> Scraper<'a> {
       .next();
 
     if content.is_none() {
+      log::info!("Did not find any content on page {}", self.page.get());
       return Ok(None);
     }
 
-    log::info!("Parsing entries on page: {}", self.page.get());
+    log::info!("Scraping found content on page: {}...", self.page.get());
 
     let entries = content
       .unwrap()
@@ -86,7 +87,7 @@ impl<'a> Scraper<'a> {
       .filter(|entry| !entry.terms.contains(&String::from("Not Offered")))
       .collect::<Vec<Entry>>();
 
-    log::info!("Fetched entries on page {}: {:?}", self.page.get(), entries);
+    log::info!("Scraped entries on page {}: {:?}", self.page.get(), entries);
 
     Ok(Some(entries))
   }
@@ -129,17 +130,39 @@ impl<'a> Scraper<'a> {
       .select_single("p")?
       .inner_html()
       .trim()
-      .split(' ')
-      .skip(2)
+      .split(':')
+      .skip(1)
       .collect::<Vec<&str>>()
-      .join(" ");
+      .join(" ")
+      .trim()
+      .to_owned();
 
     let department = content
       .select_single("div[class='meta']")?
       .select_single("p")?
       .inner_html()
+      .split('(')
+      .take(1)
+      .collect::<Vec<&str>>()
+      .join(" ")
+      .split(':')
+      .skip(1)
+      .collect::<Vec<&str>>()
+      .join(" ")
       .trim()
       .to_owned();
+
+    let department_url = format!(
+      "https://www.mcgill.ca{}",
+      content
+        .select_single("div[class='meta']")?
+        .select_single("p")?
+        .select_single("a")?
+        .value()
+        .attr("href")
+        .unwrap()
+        .to_string()
+    );
 
     let instructors = content
       .select_single("p[class='catalog-instructors']")?
@@ -148,15 +171,18 @@ impl<'a> Scraper<'a> {
       .split(' ')
       .skip(1)
       .collect::<Vec<&str>>()
-      .join(" ");
+      .join(" ")
+      .trim()
+      .to_owned();
 
     let course = Course {
       title,
       code,
       level: entry.level,
-      terms: entry.terms,
-      description,
       department,
+      department_url,
+      description,
+      terms: entry.terms,
       instructors,
     };
 
