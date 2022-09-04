@@ -35,7 +35,7 @@ impl<'a> Scraper<'a> {
   fn page(&self, page: usize) -> Result<Option<Vec<Entry>>> {
     log::info!("Fetching html on page: {page}...");
 
-    let body = Html::parse_fragment(
+    let page = Html::parse_fragment(
       &reqwest::blocking::get(format!(
         "{}?page={}",
         self.base,
@@ -44,9 +44,9 @@ impl<'a> Scraper<'a> {
       .text()?,
     );
 
-    let content = body
-      .select(&Selector::parse("div[class='view-content']").unwrap())
-      .next();
+    let content = page
+      .root_element()
+      .select_optional("div[class='view-content']")?;
 
     if content.is_none() {
       log::info!("Did not find any content on page {}", self.page.get());
@@ -57,7 +57,8 @@ impl<'a> Scraper<'a> {
 
     let entries = content
       .unwrap()
-      .select(&Selector::parse("div[class~='views-row']").unwrap())
+      .select_many("div[class~='views-row']")?
+      .iter()
       .map(|entry| Entry {
         url: entry
           .select_single("div[class~='views-field-field-course-title-long']")
@@ -93,15 +94,14 @@ impl<'a> Scraper<'a> {
   }
 
   fn course(&self, entry: Entry) -> Result<Course> {
-    let body = Html::parse_fragment(
+    let page = Html::parse_fragment(
       &reqwest::blocking::get(format!("https://www.mcgill.ca{}", entry.url))?
         .text()?,
     );
 
-    let full_title = body
-      .select(&Selector::parse("h1[id='page-title']").unwrap())
-      .next()
-      .unwrap()
+    let full_title = page
+      .root_element()
+      .select_single("h1[id='page-title']")?
       .inner_html()
       .trim()
       .to_owned();
@@ -118,12 +118,9 @@ impl<'a> Scraper<'a> {
       .collect::<Vec<&str>>()
       .join(" ");
 
-    let content = body
-      .select(
-        &Selector::parse("div[class='node node-catalog clearfix']").unwrap(),
-      )
-      .next()
-      .unwrap();
+    let content = page
+      .root_element()
+      .select_single("div[class='node node-catalog clearfix']")?;
 
     let description = content
       .select_single("div[class='content']")?
