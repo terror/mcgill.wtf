@@ -9,6 +9,6 @@ clap = { version = "3.2.20", features = ["derive"] }
 env_logger = "0.9.0"
 log = "0.4.17"
 reqwest = { version = "0.11.11", features = ["blocking"] }
-scraper = "0.13.0"
+web_scraper = { version = "0.13.0", package = "scraper" }
 serde = { version = "1.0.144", features = ["derive"] }
 serde_json = "1.0.85"

@@ -12,6 +12,9 @@ check:
 clippy:
   cargo clippy --all-targets --all-features
 
+download:
+  RUST_LOG=info just run download && prettier --write data.json
+
 fmt:
   cargo +nightly fmt
 
