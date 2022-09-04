@@ -39,35 +39,37 @@ impl Extractor {
     {
       log::info!("Scraping found content on page: {page}...");
 
-      let entries = content
+      let results = content
         .select_many("div[class~='views-row']")?
         .iter()
-        .map(|entry| Entry {
-          url: entry
-            .select_single("div[class~='views-field-field-course-title-long']")
-            .unwrap()
-            .select_single("a")
-            .unwrap()
-            .value()
-            .attr("href")
-            .unwrap()
-            .to_string(),
-          level: entry
-            .select_single("span[class~='views-field-level']")
-            .unwrap()
-            .select_single("span[class='field-content']")
-            .unwrap()
-            .inner_html(),
-          terms: entry
-            .select_single("span[class~='views-field-terms']")
-            .unwrap()
-            .select_single("span[class='field-content']")
-            .unwrap()
-            .inner_html()
-            .split(", ")
-            .map(|s| s.to_owned())
-            .collect::<Vec<String>>(),
+        .map(|entry| -> Result<Entry> {
+          Ok(Entry {
+            url: entry
+              .select_single(
+                "div[class~='views-field-field-course-title-long']",
+              )?
+              .select_single("a")?
+              .value()
+              .attr("href")
+              .ok_or_else(|| anyhow!("Failed to get attribute"))?
+              .to_string(),
+            level: entry
+              .select_single("span[class~='views-field-level']")?
+              .select_single("span[class='field-content']")?
+              .inner_html(),
+            terms: entry
+              .select_single("span[class~='views-field-terms']")?
+              .select_single("span[class='field-content']")?
+              .inner_html()
+              .split(", ")
+              .map(|s| s.to_owned())
+              .collect::<Vec<String>>(),
+          })
         })
+        .collect::<Result<Vec<Entry>, _>>();
+
+      let entries = results?
+        .into_iter()
         .filter(|entry| !entry.terms.contains(&String::from("Not Offered")))
         .collect::<Vec<Entry>>();
 
