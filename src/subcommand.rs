@@ -2,9 +2,9 @@ use super::*;
 
 #[derive(Debug, Parser)]
 pub(crate) enum Subcommand {
-  #[clap(help = "Extract course data")]
+  /// Extract and download course data
   Download(Extractor),
-  #[clap(help = "Run the backend server")]
+  /// Spawn the backend server
   Serve(Server),
 }
 
