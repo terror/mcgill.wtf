@@ -12,6 +12,7 @@ pub(crate) struct Course {
   pub(crate) title: String,
   pub(crate) code: String,
   pub(crate) level: String,
+  pub(crate) url: String,
   pub(crate) department: String,
   pub(crate) department_url: String,
   pub(crate) terms: Vec<String>,

@@ -94,10 +94,9 @@ impl<'a> Scraper<'a> {
   }
 
   fn course(&self, entry: Entry) -> Result<Course> {
-    let page = Html::parse_fragment(
-      &reqwest::blocking::get(format!("https://www.mcgill.ca{}", entry.url))?
-        .text()?,
-    );
+    let url = format!("https://www.mcgill.ca{}", entry.url);
+
+    let page = Html::parse_fragment(&reqwest::blocking::get(&url)?.text()?);
 
     let full_title = page
       .root_element()
@@ -106,81 +105,70 @@ impl<'a> Scraper<'a> {
       .trim()
       .to_owned();
 
-    let title = full_title
-      .split(' ')
-      .skip(2)
-      .collect::<Vec<&str>>()
-      .join(" ");
-
-    let code = full_title
-      .split(' ')
-      .take(2)
-      .collect::<Vec<&str>>()
-      .join(" ");
-
     let content = page
       .root_element()
       .select_single("div[class='node node-catalog clearfix']")?;
 
-    let description = content
-      .select_single("div[class='content']")?
-      .select_single("p")?
-      .inner_html()
-      .trim()
-      .split(':')
-      .skip(1)
-      .collect::<Vec<&str>>()
-      .join(" ")
-      .trim()
-      .to_owned();
-
-    let department = content
-      .select_single("div[class='meta']")?
-      .select_single("p")?
-      .inner_html()
-      .split('(')
-      .take(1)
-      .collect::<Vec<&str>>()
-      .join(" ")
-      .split(':')
-      .skip(1)
-      .collect::<Vec<&str>>()
-      .join(" ")
-      .trim()
-      .to_owned();
-
-    let department_url = format!(
-      "https://www.mcgill.ca{}",
-      content
+    let course = Course {
+      title: full_title
+        .split(' ')
+        .skip(2)
+        .collect::<Vec<&str>>()
+        .join(" "),
+      code: full_title
+        .split(' ')
+        .take(2)
+        .collect::<Vec<&str>>()
+        .join(" "),
+      level: entry.level,
+      url,
+      department: content
         .select_single("div[class='meta']")?
         .select_single("p")?
-        .select_single("a")?
-        .value()
-        .attr("href")
-        .unwrap()
-        .to_string()
-    );
-
-    let instructors = content
-      .select_single("p[class='catalog-instructors']")?
-      .inner_html()
-      .trim()
-      .split(' ')
-      .skip(1)
-      .collect::<Vec<&str>>()
-      .join(" ")
-      .trim()
-      .to_owned();
-
-    let course = Course {
-      title,
-      code,
-      level: entry.level,
-      department,
-      department_url,
-      description,
+        .inner_html()
+        .split('(')
+        .take(1)
+        .collect::<Vec<&str>>()
+        .join(" ")
+        .split(':')
+        .skip(1)
+        .collect::<Vec<&str>>()
+        .join(" ")
+        .trim()
+        .to_owned(),
+      department_url: format!(
+        "https://www.mcgill.ca{}",
+        content
+          .select_single("div[class='meta']")?
+          .select_single("p")?
+          .select_single("a")?
+          .value()
+          .attr("href")
+          .unwrap()
+          .to_string()
+      ),
+      description: content
+        .select_single("div[class='content']")?
+        .select_single("p")?
+        .inner_html()
+        .trim()
+        .split(':')
+        .skip(1)
+        .collect::<Vec<&str>>()
+        .join(" ")
+        .trim()
+        .to_owned(),
       terms: entry.terms,
-      instructors,
+      instructors: content
+        .select_single("p[class='catalog-instructors']")?
+        .inner_html()
+        .trim()
+        .split(' ')
+        .skip(1)
+        .collect::<Vec<&str>>()
+        .join(" ")
+        .trim()
+        .to_owned(),
     };
 
     log::info!("Parsed course: {:?}", course);
