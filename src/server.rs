@@ -55,7 +55,7 @@ impl Server {
       )?)?
       .iter()
       .try_for_each(|course| -> Result {
-        log::info!("{:?}", course);
+        log::info!("Writing course: {:?}", course);
 
         courses.insert(format!("course:{}", course.code), course.clone());
 

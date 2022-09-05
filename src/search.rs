@@ -6,8 +6,6 @@ pub(crate) struct Search {
   pub(crate) courses: BTreeMap<String, Course>,
 }
 
-use std::collections::HashMap;
-
 impl Search {
   pub(crate) async fn search(
     self,

@@ -17,7 +17,7 @@ use {
   scraper::{ElementRef, Html, Selector},
   serde::{Deserialize, Serialize},
   std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, HashMap},
     fs,
     net::SocketAddr,
     path::PathBuf,
