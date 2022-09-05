@@ -10,7 +10,7 @@ use {
     subcommand::Subcommand,
   },
   anyhow::anyhow,
-  axum::{response::IntoResponse, routing::get, Json, Router},
+  axum::{extract::Path, response::IntoResponse, routing::get, Json, Router},
   axum_server::Handle,
   clap::Parser,
   http::Method,

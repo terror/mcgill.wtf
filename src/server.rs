@@ -27,7 +27,7 @@ impl Server {
 
       let mut command = redis::cmd("FT.CREATE");
 
-      let args = "
+      for argument in "
         courses ON JSON PREFIX 1 course:
         SCHEMA
         $.title AS title TEXT WEIGHT 2
@@ -37,10 +37,9 @@ impl Server {
       .split(' ')
       .filter(|arg| !arg.is_empty())
       .map(|arg| arg.trim())
-      .collect::<Vec<&str>>();
-
-      for arg in args {
-        command = command.arg(arg).clone();
+      .collect::<Vec<&str>>()
+      {
+        command = command.arg(argument).to_owned();
       }
 
       command.query(&mut client.get_connection()?)?;
@@ -81,7 +80,10 @@ impl Server {
         .serve(
           Router::new()
             .route("/", get(|| async { "Hello, world!" }))
-            .route("/search", get(|| async { search.search().await }))
+            .route(
+              "/search/:q",
+              get(|params| async move { search.search(params).await }),
+            )
             .layer(
               CorsLayer::new()
                 .allow_methods([Method::GET])
