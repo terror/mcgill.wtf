@@ -7,7 +7,7 @@ pub(crate) struct Entry {
   pub(crate) terms: Vec<String>,
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct Course {
   pub(crate) title: String,
   pub(crate) code: String,

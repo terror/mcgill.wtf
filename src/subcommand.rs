@@ -9,16 +9,10 @@ pub(crate) enum Subcommand {
 }
 
 impl Subcommand {
-  pub(crate) fn run(self, options: Options) -> Result {
+  pub(crate) fn run(self) -> Result {
     match self {
-      Self::Download(extractor) => fs::write(
-        options
-          .datasource
-          .unwrap_or_else(|| PathBuf::from("data.json")),
-        serde_json::to_string(&extractor.run()?)?,
-      )
-      .map_err(anyhow::Error::from),
-      Self::Serve(server) => server.run(options),
+      Self::Download(extractor) => extractor.run(),
+      Self::Serve(server) => server.run(),
     }
   }
 }

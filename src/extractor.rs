@@ -1,36 +1,54 @@
 use super::*;
 
-const BASE_URL: &str = "https://www.mcgill.ca/study/2022-2023/courses/search";
+const BASE_URL: &str = "https://www.mcgill.ca";
 
 #[derive(Debug, Parser)]
-pub(crate) struct Extractor;
+pub(crate) struct Extractor {
+  // Starting page at which to start downloading courses
+  #[clap(long)]
+  starting_page: Option<usize>,
+  /// Optional file path in which data is written to
+  #[clap(long)]
+  datasource: Option<PathBuf>,
+}
 
 impl Extractor {
-  pub(crate) fn run(&self) -> Result<Vec<Course>> {
+  pub(crate) fn run(&self) -> Result {
     log::info!("Running scraper...");
 
     let mut entries = Vec::new();
 
-    let mut page = 0;
+    let mut page = self.starting_page.unwrap_or(0);
 
     while let Some(page_entries) = self.page(page)? {
       entries.extend(page_entries);
       page += 1;
     }
 
-    Ok(
-      entries
-        .iter()
-        .map(|entry| self.course(entry.clone()).unwrap())
-        .collect::<Vec<Course>>(),
+    fs::write(
+      self
+        .datasource
+        .clone()
+        .unwrap_or_else(|| PathBuf::from("data.json")),
+      serde_json::to_string(
+        &entries
+          .iter()
+          .map(|entry| self.course(entry.clone()).unwrap())
+          .collect::<Vec<Course>>(),
+      )?,
     )
+    .map_err(anyhow::Error::from)
   }
 
   fn page(&self, page: usize) -> Result<Option<Vec<Entry>>> {
     log::info!("Fetching html on page: {page}...");
 
     let html = Html::parse_fragment(
-      &reqwest::blocking::get(format!("{}?page={}", BASE_URL, page))?.text()?,
+      &reqwest::blocking::get(format!(
+        "{}/study/2022-2023/courses/search?page={}",
+        BASE_URL, page
+      ))?
+      .text()?,
     );
 
     if let Some(content) = html
@@ -44,15 +62,18 @@ impl Extractor {
         .iter()
         .map(|entry| -> Result<Entry> {
           Ok(Entry {
-            url: entry
-              .select_single(
-                "div[class~='views-field-field-course-title-long']",
-              )?
-              .select_single("a")?
-              .value()
-              .attr("href")
-              .ok_or_else(|| anyhow!("Failed to get attribute"))?
-              .to_string(),
+            url: format!(
+              "{}{}",
+              BASE_URL,
+              entry
+                .select_single(
+                  "div[class~='views-field-field-course-title-long']",
+                )?
+                .select_single("a")?
+                .value()
+                .attr("href")
+                .ok_or_else(|| anyhow!("Failed to get attribute"))?
+            ),
             level: entry
               .select_single("span[class~='views-field-level']")?
               .select_single("span[class='field-content']")?
@@ -84,18 +105,17 @@ impl Extractor {
   }
 
   fn course(&self, entry: Entry) -> Result<Course> {
-    let url = format!("https://www.mcgill.ca{}", entry.url);
+    let html =
+      Html::parse_fragment(&reqwest::blocking::get(&entry.url)?.text()?);
 
-    let page = Html::parse_fragment(&reqwest::blocking::get(&url)?.text()?);
-
-    let full_title = page
+    let full_title = html
       .root_element()
       .select_single("h1[id='page-title']")?
       .inner_html()
       .trim()
       .to_owned();
 
-    let content = page
+    let content = html
       .root_element()
       .select_single("div[class='node node-catalog clearfix']")?;
 
@@ -111,7 +131,7 @@ impl Extractor {
         .collect::<Vec<&str>>()
         .join(" "),
       level: entry.level,
-      url,
+      url: entry.url,
       department: content
         .select_single("div[class='meta']")?
         .select_single("p")?
@@ -127,7 +147,8 @@ impl Extractor {
         .trim()
         .to_owned(),
       department_url: format!(
-        "https://www.mcgill.ca{}",
+        "{}{}",
+        BASE_URL,
         content
           .select_single("div[class='meta']")?
           .select_single("p")?

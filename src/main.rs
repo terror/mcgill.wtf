@@ -3,19 +3,26 @@ use {
     arguments::Arguments,
     extractor::Extractor,
     model::{Course, Entry},
-    options::Options,
+    search::Search,
     select::Select,
     server::Server,
+    spawn::{Spawn, SpawnOptions},
     subcommand::Subcommand,
   },
   anyhow::anyhow,
-  axum::{routing::get, Router},
+  axum::{response::IntoResponse, routing::get, Json, Router},
   axum_server::Handle,
   clap::Parser,
   http::Method,
   scraper::{ElementRef, Html, Selector},
-  serde::Serialize,
-  std::{fs, net::SocketAddr, path::PathBuf, process},
+  serde::{Deserialize, Serialize},
+  std::{
+    collections::BTreeMap,
+    fs,
+    net::SocketAddr,
+    path::PathBuf,
+    process::{self, Command},
+  },
   tokio::runtime::Runtime,
   tower_http::cors::{Any, CorsLayer},
 };
@@ -23,9 +30,10 @@ use {
 mod arguments;
 mod extractor;
 mod model;
-mod options;
+mod search;
 mod select;
 mod server;
+mod spawn;
 mod subcommand;
 
 type Result<T = (), E = anyhow::Error> = std::result::Result<T, E>;
