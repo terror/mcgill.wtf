@@ -25,6 +25,7 @@ use {
   },
   tokio::runtime::Runtime,
   tower_http::cors::{Any, CorsLayer},
+  uuid::Uuid,
 };
 
 mod arguments;

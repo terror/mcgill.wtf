@@ -2,14 +2,11 @@ use super::*;
 
 #[derive(Debug, Parser)]
 pub(crate) struct Server {
-  /// Optional port to listen on
-  #[clap(long)]
+  #[clap(long, help = "Optional port to listen on.")]
   port: Option<u16>,
-  /// Datasource to read from
-  #[clap(long)]
+  #[clap(long, help = "Datasource to read from.")]
   datasource: PathBuf,
-  /// Specifies whether or not we're serving locally
-  #[clap(long)]
+  #[clap(long, help = "Specifies whether or not we're serving locally.")]
   local: bool,
 }
 
@@ -23,15 +20,18 @@ impl Server {
         port: 7501,
       })?;
 
-      log::info!("Initializing redis full-text search");
+      log::info!("Initializing redis full-text search...");
 
       let mut command = redis::cmd("FT.CREATE");
 
       for argument in "
-        courses ON JSON PREFIX 1 course:
+        courses ON JSON PREFIX 1 course: NOOFFSETS
         SCHEMA
         $.title AS title TEXT WEIGHT 2
         $.description AS description TEXT
+        $.subject AS subject TEXT NOSTEM WEIGHT 2
+        $.code AS code TEXT NOSTEM WEIGHT 2
+        $.level AS level TAG
       "
       .trim()
       .split(' ')
@@ -55,13 +55,13 @@ impl Server {
       )?)?
       .iter()
       .try_for_each(|course| -> Result {
-        log::info!("Writing course: {:?}", course);
+        log::info!("Writing course {}{}", course.subject, course.code);
 
-        courses.insert(format!("course:{}", course.code), course.clone());
+        courses.insert(format!("course:{}", course.id), course.clone());
 
         pipeline
           .cmd("JSON.SET")
-          .arg(format!("course:{}", course.code))
+          .arg(format!("course:{}", course.id))
           .arg("$")
           .arg(serde_json::to_string(&course)?)
           .query(&mut client.get_connection()?)?;

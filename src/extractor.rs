@@ -4,11 +4,9 @@ const BASE_URL: &str = "https://www.mcgill.ca";
 
 #[derive(Debug, Parser)]
 pub(crate) struct Extractor {
-  // Starting page at which to start downloading courses
-  #[clap(long)]
+  #[clap(long, help = "Starting page at which to start downloading courses.")]
   starting_page: Option<usize>,
-  /// Optional file path in which data is written to
-  #[clap(long)]
+  #[clap(long, help = "Optional file path in which data is written to.")]
   datasource: Option<PathBuf>,
 }
 
@@ -115,21 +113,41 @@ impl Extractor {
       .trim()
       .to_owned();
 
+    let full_code = full_title
+      .split(' ')
+      .take(2)
+      .collect::<Vec<&str>>()
+      .join(" ");
+
+    let subject = full_code
+      .split(' ')
+      .take(1)
+      .collect::<Vec<&str>>()
+      .join(" ");
+
+    let code = full_code
+      .split(' ')
+      .skip(1)
+      .collect::<Vec<&str>>()
+      .join(" ");
+
     let content = html
       .root_element()
       .select_single("div[class='node node-catalog clearfix']")?;
 
     let course = Course {
+      id: Uuid::new_v5(
+        &Uuid::NAMESPACE_X500,
+        format!("{}-{}", subject, code).as_bytes(),
+      )
+      .to_string(),
       title: full_title
         .split(' ')
         .skip(2)
         .collect::<Vec<&str>>()
         .join(" "),
-      code: full_title
-        .split(' ')
-        .take(2)
-        .collect::<Vec<&str>>()
-        .join(" "),
+      subject,
+      code,
       level: entry.level,
       url: entry.url,
       department: content

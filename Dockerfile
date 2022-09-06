@@ -22,4 +22,4 @@ COPY --from=redis-stack /opt/redis-stack/lib/rejson.so /opt/redis-stack/lib/rejs
 COPY --from=builder /usr/src/app/target/release/server /usr/bin
 COPY --from=builder /usr/src/app/data.json .
 
-CMD server serve --datasource ./data.json
+CMD server serve --local --datasource ./data.json
