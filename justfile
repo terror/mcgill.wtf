@@ -25,6 +25,7 @@ download start='0':
 
 fmt:
   cargo fmt
+  prettier --write .
 
 fmt-check:
   cargo fmt --all -- --check

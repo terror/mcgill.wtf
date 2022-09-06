@@ -20,6 +20,6 @@ COPY --from=redis-stack /opt/redis-stack/lib/redisearch.so /opt/redis-stack/lib/
 COPY --from=redis-stack /opt/redis-stack/lib/rejson.so /opt/redis-stack/lib/rejson.so
 
 COPY --from=builder /usr/src/app/target/release/server /usr/bin
-COPY --from=builder /usr/src/app/data.json .
+COPY --from=builder /usr/src/app/data.json ./
 
 CMD server serve --local --datasource ./data.json
