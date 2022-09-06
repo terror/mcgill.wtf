@@ -10,25 +10,24 @@ all: build test clippy fmt-check
 build:
   cargo build
 
+clippy:
+  cargo clippy --all-targets --all-features
+
 container:
   docker build -t mcgill.wtf .
 
 develop:
   docker run -it --rm -p 7500:7500 mcgill.wtf
 
-clippy:
-  cargo clippy --all-targets --all-features
-
 download start='0':
   RUST_LOG=info just run download --starting-page {{start}} && \
     prettier --write data.json
 
 fmt:
-  cargo +nightly fmt
+  cargo fmt
 
 fmt-check:
-  cargo +nightly fmt --all -- --check
-  @echo formatting check done
+  cargo fmt --all -- --check
 
 run *args:
   cargo run -- {{args}}

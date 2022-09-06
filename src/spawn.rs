@@ -14,11 +14,11 @@ impl Spawn for redis::Client {
   fn spawn(options: SpawnOptions) -> Result<redis::Client> {
     if options.local {
       Command::new("docker")
-        .args(&["kill", "mcgill.wtf-redis"])
+        .args(["kill", "mcgill.wtf-redis"])
         .status()?;
 
       Command::new("docker")
-        .args(&[
+        .args([
           "run",
           "--name",
           "mcgill.wtf-redis",
@@ -34,7 +34,7 @@ impl Spawn for redis::Client {
         .status()?;
     } else {
       Command::new("redis-server")
-        .args(&[
+        .args([
           "--loadmodule",
           "/opt/redis-stack/lib/redisearch.so",
           "--loadmodule",
