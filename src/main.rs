@@ -1,13 +1,7 @@
 use {
   crate::{
-    arguments::Arguments,
-    extractor::Extractor,
-    model::{Course, Entry},
-    search::Search,
-    select::Select,
-    server::Server,
-    spawn::{Spawn, SpawnOptions},
-    subcommand::Subcommand,
+    arguments::Arguments, course::Course, extractor::Extractor, search::Search,
+    select::Select, server::Server, subcommand::Subcommand,
   },
   anyhow::anyhow,
   axum::{extract::Path, response::IntoResponse, routing::get, Json, Router},
@@ -21,7 +15,7 @@ use {
     fs,
     net::SocketAddr,
     path::PathBuf,
-    process::{self, Command},
+    process,
   },
   tokio::runtime::Runtime,
   tower_http::cors::{Any, CorsLayer},
@@ -29,12 +23,11 @@ use {
 };
 
 mod arguments;
+mod course;
 mod extractor;
-mod model;
 mod search;
 mod select;
 mod server;
-mod spawn;
 mod subcommand;
 
 type Result<T = (), E = anyhow::Error> = std::result::Result<T, E>;

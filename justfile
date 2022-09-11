@@ -34,7 +34,7 @@ run *args:
   cargo run -- {{args}}
 
 serve datasource='data.json':
-  RUST_LOG=info just run serve --local --datasource {{datasource}}
+  RUST_LOG=info ./bin/serve -l -d {{datasource}}
 
 test:
   cargo test

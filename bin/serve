@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -euox pipefail
+
+CONTAINER="mcgill.wtf-redis"
+DATASOURCE="data.json"
+LOCAL=false
+PORT=7501
+
+while getopts "c:d:l:p:" opt; do
+  case ${opt} in
+    c) CONTAINER="${OPTARG}";;
+    d) DATASOURCE="${OPTARG}";;
+    l) LOCAL=true;;
+    p) PORT="${OPTARG}";;
+   \?) echo "Invalid option -$OPTARG" >&2 && exit 1;;
+  esac
+done
+
+if [[ $LOCAL ]]; then
+  if docker ps | grep "$CONTAINER"; then
+    docker kill "$CONTAINER"
+  fi
+
+  docker run --name "$CONTAINER" \
+    -d --rm -p "$PORT":6379 \
+    redis/redis-stack-server:latest redis-stack-server \
+    --save
+else
+  redis-server \
+    --loadmodule /opt/redis-stack/lib/redisearch.so \
+    --loadmodule /opt/redis-stack/lib/rejson.so \
+    --port "$PORT" \
+    --save
+fi
+
+cargo run serve --datasource="$DATASOURCE"

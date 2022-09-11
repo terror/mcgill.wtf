@@ -10,6 +10,13 @@ pub(crate) struct Extractor {
   datasource: Option<PathBuf>,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct Entry {
+  pub(crate) url: String,
+  pub(crate) level: String,
+  pub(crate) terms: Vec<String>,
+}
+
 impl Extractor {
   pub(crate) fn run(&self) -> Result {
     log::info!("Running scraper...");

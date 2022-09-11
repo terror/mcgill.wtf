@@ -15,10 +15,7 @@ impl Server {
     Runtime::new()?.block_on(async {
       log::info!("Setting up redis client...");
 
-      let client = redis::Client::spawn(SpawnOptions {
-        local: self.local,
-        port: 7501,
-      })?;
+      let client = redis::Client::open("redis://localhost:7501")?;
 
       log::info!("Initializing redis full-text search...");
 

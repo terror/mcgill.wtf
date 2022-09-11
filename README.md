@@ -22,14 +22,17 @@ $ RUST_LOG=info cargo run -- download --starting-page 0
 
 #### Spawning the front and back-end components
 
-The server listens for requests on port `7500` and can be spawned by running the
-following:
+In order to run the server locally you need [docker](https://www.docker.com/)
+and [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
+installed on your machine. The server listens for requests on port `7500` and can
+be spawned by running the `serve` script in the /bin directory located in the
+project root:
 
 ```bash
-$ RUST_LOG=info cargo run -- serve --local --datasource data.json
+$ RUST_LOG=info ./bin/serve -l -d {{datasource}}
 ```
 
-The front-end is now able to issue requests to the server, launch via the
+The front-end is now able to issue requests to the server, launch it via the
 following commands:
 
 ```bash

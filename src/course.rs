@@ -1,12 +1,5 @@
 use super::*;
 
-#[derive(Debug, Clone)]
-pub(crate) struct Entry {
-  pub(crate) url: String,
-  pub(crate) level: String,
-  pub(crate) terms: Vec<String>,
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct Course {
   /// A unique alphanumeric identifier
