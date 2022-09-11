@@ -4,10 +4,10 @@ const BASE_URL: &str = "https://www.mcgill.ca";
 
 #[derive(Debug, Parser)]
 pub(crate) struct Extractor {
-  #[clap(long, help = "Starting page at which to start downloading courses.")]
-  starting_page: Option<usize>,
   #[clap(long, help = "Optional file path in which data is written to.")]
   datasource: Option<PathBuf>,
+  #[clap(long, help = "Starting page at which to start downloading courses.")]
+  starting_page: Option<usize>,
 }
 
 #[derive(Debug, Clone)]

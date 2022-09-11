@@ -2,75 +2,20 @@ use super::*;
 
 #[derive(Debug, Parser)]
 pub(crate) struct Server {
-  #[clap(long, help = "Optional port to listen on.")]
-  port: Option<u16>,
   #[clap(long, help = "Datasource to read from.")]
   datasource: PathBuf,
-  #[clap(long, help = "Specifies whether or not we're serving locally.")]
-  local: bool,
+  #[clap(long, help = "Optional port to listen on.")]
+  port: Option<u16>,
 }
 
 impl Server {
   pub(crate) fn run(self) -> Result {
     Runtime::new()?.block_on(async {
-      log::info!("Setting up redis client...");
-
-      let client = redis::Client::open("redis://localhost:7501")?;
-
-      log::info!("Initializing redis full-text search...");
-
-      let mut command = redis::cmd("FT.CREATE");
-
-      for argument in "
-        courses ON JSON PREFIX 1 course: NOOFFSETS
-        SCHEMA
-        $.title AS title TEXT WEIGHT 2
-        $.description AS description TEXT
-        $.subject AS subject TEXT NOSTEM WEIGHT 2
-        $.code AS code TEXT NOSTEM WEIGHT 2
-        $.level AS level TAG
-      "
-      .trim()
-      .split(' ')
-      .filter(|arg| !arg.is_empty())
-      .map(|arg| arg.trim())
-      .collect::<Vec<&str>>()
-      {
-        command = command.arg(argument).to_owned();
-      }
-
-      command.query(&mut client.get_connection()?)?;
-
-      log::info!("Populating redis...");
-
-      let mut pipeline = redis::Pipeline::new();
-
-      let mut courses = BTreeMap::new();
-
-      serde_json::from_str::<Vec<Course>>(&fs::read_to_string(
-        self.datasource,
-      )?)?
-      .iter()
-      .try_for_each(|course| -> Result {
-        log::info!("Writing course {}{}", course.subject, course.code);
-
-        courses.insert(format!("course:{}", course.id), course.clone());
-
-        pipeline
-          .cmd("JSON.SET")
-          .arg(format!("course:{}", course.id))
-          .arg("$")
-          .arg(serde_json::to_string(&course)?)
-          .query(&mut client.get_connection()?)?;
-
-        Ok(())
-      })?;
+      let search = Search::initialize(self.datasource)?;
 
       let addr = SocketAddr::from(([127, 0, 0, 1], self.port.unwrap_or(7500)));
 
       log::info!("Listening on port {}...", addr.port());
-
-      let search = Search { client, courses };
 
       axum_server::Server::bind(addr)
         .handle(Handle::new())
