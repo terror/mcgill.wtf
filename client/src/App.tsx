@@ -9,6 +9,7 @@ import {
   Text,
   Box,
   Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
 
 type Payload = {
@@ -39,7 +40,7 @@ const App: React.ElementType = () => {
 
   return (
     <Center>
-      <Stack textAlign="center" width="50%">
+      <Stack alignItems="center" width="50%">
         <Heading as="h1" size="2xl">
           mcgill.wtf
         </Heading>
@@ -50,9 +51,10 @@ const App: React.ElementType = () => {
           placeholder="Search for a course"
           onChange={(event) => handleChange(event)}
         />
-        <Stack alignItems="center">
+        <Stack alignItems="right">
           {payload && (
             <Alert status="success">
+              <AlertIcon />
               Found {payload.courses.length} results ({payload.time}ms)
             </Alert>
           )}
