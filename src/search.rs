@@ -6,6 +6,12 @@ pub(crate) struct Search {
   courses: BTreeMap<String, Course>,
 }
 
+#[derive(Serialize)]
+struct Payload {
+  time: u128,
+  courses: Vec<Course>,
+}
+
 impl Search {
   pub(crate) fn initialize(datasource: PathBuf) -> Result<Self> {
     log::info!("Setting up redis client...");
@@ -79,14 +85,21 @@ impl Search {
       command = command.arg(argument).to_owned();
     }
 
-    Json(
-      command
-        .query::<Vec<String>>(&mut self.client.get_connection().unwrap())
-        .unwrap()
+    let now = Instant::now();
+
+    let identifiers = command
+      .query::<Vec<String>>(&mut self.client.get_connection().unwrap())
+      .unwrap();
+
+    let elapsed = now.elapsed().as_millis();
+
+    Json(Payload {
+      time: elapsed,
+      courses: identifiers
         .iter()
-        .map(|course_id| self.courses.get(course_id).unwrap())
+        .map(|identifier| self.courses.get(identifier).unwrap())
         .cloned()
         .collect::<Vec<Course>>(),
-    )
+    })
   }
 }
