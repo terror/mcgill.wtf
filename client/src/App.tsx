@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 
 import {
-  Input,
-  Stack,
-  Heading,
-  Flex,
-  Center,
-  Text,
-  Box,
   Alert,
   AlertIcon,
+  Box,
+  Center,
+  Flex,
+  Heading,
+  Image,
+  Input,
+  Link,
+  Stack,
+  Text,
+  Wrap,
 } from '@chakra-ui/react';
 
 type Payload = {
@@ -39,37 +42,44 @@ const App: React.ElementType = () => {
   };
 
   return (
-    <Center>
-      <Stack alignItems="center" width="50%">
-        <Heading as="h1" size="2xl">
-          mcgill.wtf
-        </Heading>
+    <Center padding='1em'>
+      <Stack alignItems='center' width='50%'>
+        <Wrap>
+          <Heading as='h1' size='2xl'>
+            mcgill.wtf
+          </Heading>
+          <Image src='./src/assets/mcgill.png' width='4em' />
+        </Wrap>
         <Text>
           A low-latency full-text search of mcgill's entire course catalog
         </Text>
         <Input
-          placeholder="Search for a course"
+          placeholder='Search for a course'
           onChange={(event) => handleChange(event)}
         />
-        <Stack alignItems="right">
+        <Stack alignItems='right'>
           {payload && (
-            <Alert status="success">
+            <Alert status='success'>
               <AlertIcon />
-              Found {payload.courses.length} results ({payload.time}ms)
+              Found {payload.courses.length} results ({payload.time} ms)
             </Alert>
           )}
           {payload &&
             payload.courses.map((course: Course, _: number) => {
               return (
                 <Flex>
-                  <Box ml="3">
-                    <Text fontWeight="bold">{course.title}</Text>
-                    <Text fontSize="sm">
+                  <Box ml='3'>
+                    <Text fontWeight='bold'>
+                      <Link href={course.url} isExternal>
+                        {course.subject} {course.code}: {course.title}
+                      </Link>
+                    </Text>
+                    <Text fontSize='sm'>
                       {course.department} | {course.level} |{' '}
                       {course.terms.join(', ')}
                     </Text>
-                    <Text fontSize="sm">{course.description}</Text>
-                    <Text fontSize="sm">{course.instructors}</Text>
+                    <Text fontSize='sm'>{course.description}</Text>
+                    <Text fontSize='sm'>{course.instructors}</Text>
                   </Box>
                 </Flex>
               );
