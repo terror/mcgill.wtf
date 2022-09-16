@@ -1,7 +1,7 @@
 use super::*;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Search {
+pub(crate) struct Index {
   client: redis::Client,
   courses: BTreeMap<String, Course>,
 }
@@ -12,7 +12,7 @@ struct Payload {
   courses: Vec<Course>,
 }
 
-impl Search {
+impl Index {
   pub(crate) fn initialize(datasource: PathBuf) -> Result<Self> {
     log::info!("Setting up redis client...");
 

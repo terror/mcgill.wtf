@@ -11,7 +11,7 @@ pub(crate) struct Server {
 impl Server {
   pub(crate) fn run(self) -> Result {
     Runtime::new()?.block_on(async {
-      let search = Search::initialize(self.datasource)?;
+      let search = Index::initialize(self.datasource)?;
 
       let addr = SocketAddr::from(([127, 0, 0, 1], self.port.unwrap_or(7500)));
 

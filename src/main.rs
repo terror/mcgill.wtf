@@ -1,6 +1,6 @@
 use {
   crate::{
-    arguments::Arguments, course::Course, extractor::Extractor, search::Search,
+    arguments::Arguments, course::Course, extractor::Extractor, index::Index,
     select::Select, server::Server, subcommand::Subcommand,
   },
   anyhow::anyhow,
@@ -26,7 +26,7 @@ use {
 mod arguments;
 mod course;
 mod extractor;
-mod search;
+mod index;
 mod select;
 mod server;
 mod subcommand;
