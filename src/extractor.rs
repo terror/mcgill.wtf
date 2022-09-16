@@ -1,66 +1,19 @@
 use super::*;
 
-const BASE_URL: &str = "https://www.mcgill.ca";
-
-#[derive(Debug, Parser)]
-pub(crate) struct Extractor {
-  #[clap(long, help = "Optional file path in which data is written to.")]
-  datasource: Option<PathBuf>,
-  #[clap(long, help = "Starting page at which to start downloading courses.")]
-  starting_page: Option<usize>,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct Entry {
-  pub(crate) url: String,
-  pub(crate) level: String,
-  pub(crate) terms: Vec<String>,
-}
+#[derive(Debug)]
+pub(crate) struct Extractor;
 
 impl Extractor {
-  pub(crate) fn run(&self) -> Result {
-    log::info!("Running scraper...");
+  pub(crate) fn extract_page(page: Page) -> Result<Option<Vec<Entry>>> {
+    log::info!("Parsing html on page: {}...", page.number);
 
-    let mut entries = Vec::new();
-
-    let mut page = self.starting_page.unwrap_or(0);
-
-    while let Some(page_entries) = self.page(page)? {
-      entries.extend(page_entries);
-      page += 1;
-    }
-
-    fs::write(
-      self
-        .datasource
-        .clone()
-        .unwrap_or_else(|| PathBuf::from("data.json")),
-      serde_json::to_string(
-        &entries
-          .iter()
-          .map(|entry| self.course(entry.clone()).unwrap())
-          .collect::<Vec<Course>>(),
-      )?,
-    )
-    .map_err(anyhow::Error::from)
-  }
-
-  fn page(&self, page: usize) -> Result<Option<Vec<Entry>>> {
-    log::info!("Fetching html on page: {page}...");
-
-    let html = Html::parse_fragment(
-      &reqwest::blocking::get(format!(
-        "{}/study/2022-2023/courses/search?page={}",
-        BASE_URL, page
-      ))?
-      .text()?,
-    );
+    let html = Html::parse_fragment(&page.content);
 
     if let Some(content) = html
       .root_element()
       .select_optional("div[class='view-content']")?
     {
-      log::info!("Scraping found content on page: {page}...");
+      log::info!("Parsing found content on page {}...", page.number);
 
       let results = content
         .select_many("div[class~='views-row']")?
@@ -99,19 +52,18 @@ impl Extractor {
         .filter(|entry| !entry.terms.contains(&String::from("Not Offered")))
         .collect::<Vec<Entry>>();
 
-      log::info!("Scraped entries on page {}: {:?}", page, entries);
+      log::info!("Scraped entries on page {}: {:?}", page.number, entries);
 
       return Ok(Some(entries));
     }
 
-    log::info!("Did not find any content on page {}", page);
+    log::info!("Did not find any content on page {}", page.number);
 
     Ok(None)
   }
 
-  fn course(&self, entry: Entry) -> Result<Course> {
-    let html =
-      Html::parse_fragment(&reqwest::blocking::get(&entry.url)?.text()?);
+  pub(crate) fn extract_course(entry: Entry) -> Result<Course> {
+    let html = Html::parse_fragment(&entry.content()?);
 
     let full_title = html
       .root_element()

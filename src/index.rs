@@ -1,22 +1,22 @@
 use super::*;
 
+use std::cell::RefCell;
+
 #[derive(Debug, Clone)]
 pub(crate) struct Index {
   client: redis::Client,
-  courses: BTreeMap<String, Course>,
-}
-
-#[derive(Deserialize)]
-pub(crate) struct Params {
-  query: String,
+  courses: Arc<Mutex<RefCell<BTreeMap<String, Course>>>>,
 }
 
 impl Index {
-  pub(crate) fn initialize(datasource: PathBuf) -> Result<Self> {
-    log::info!("Setting up redis client...");
+  pub(crate) fn open() -> Result<Self> {
+    Ok(Self {
+      client: redis::Client::open("redis://localhost:7501")?,
+      courses: Arc::new(Mutex::new(RefCell::new(BTreeMap::new()))),
+    })
+  }
 
-    let client = redis::Client::open("redis://localhost:7501")?;
-
+  pub(crate) fn index(&self, datasource: PathBuf) -> Result {
     log::info!("Initializing redis full-text search...");
 
     let mut command = redis::cmd("FT.CREATE");
@@ -33,40 +33,36 @@ impl Index {
       ",
     );
 
-    command.query(&mut client.get_connection()?)?;
+    command.query(&mut self.client.get_connection()?)?;
 
     log::info!("Populating redis...");
 
     let mut pipeline = redis::Pipeline::new();
-
-    let mut courses = BTreeMap::new();
 
     serde_json::from_str::<Vec<Course>>(&fs::read_to_string(datasource)?)?
       .iter()
       .try_for_each(|course| -> Result {
         log::info!("Writing course {}{}", course.subject, course.code);
 
-        courses.insert(format!("course:{}", course.id), course.clone());
+        self
+          .courses
+          .lock()
+          .unwrap()
+          .borrow_mut()
+          .insert(format!("course:{}", course.id), course.clone());
 
         pipeline
           .cmd("JSON.SET")
           .arg(format!("course:{}", course.id))
           .arg("$")
           .arg(serde_json::to_string(&course)?)
-          .query(&mut client.get_connection()?)?;
+          .query(&mut self.client.get_connection()?)?;
 
         Ok(())
-      })?;
-
-    Ok(Self { client, courses })
+      })
   }
 
-  pub(crate) async fn search(
-    self,
-    Query(params): Query<Params>,
-  ) -> impl IntoResponse + 'static {
-    let query = params.query;
-
+  pub(crate) fn search(&self, query: &str) -> Result<Payload> {
     log::info!("Received query: {query}");
 
     let mut command = redis::cmd("FT.SEARCH");
@@ -75,19 +71,28 @@ impl Index {
 
     let now = Instant::now();
 
-    let identifiers = command
-      .query::<Vec<String>>(&mut self.client.get_connection().unwrap())
-      .unwrap();
+    let identifiers =
+      command.query::<Vec<String>>(&mut self.client.get_connection()?)?;
 
     let elapsed = now.elapsed().as_millis();
 
-    Json(Payload {
+    Ok(Payload {
       time: elapsed,
       courses: identifiers
         .iter()
-        .map(|identifier| self.courses.get(identifier).unwrap())
-        .cloned()
-        .collect::<Vec<Course>>(),
+        .map(|identifier| {
+          self
+            .courses
+            .lock()
+            .unwrap()
+            .borrow_mut()
+            .get(identifier)
+            .cloned()
+            .ok_or_else(|| {
+              anyhow!("Failed to find course with identifier {identifier}")
+            })
+        })
+        .collect::<Result<Vec<Course>, _>>()?,
     })
   }
 }

@@ -1,11 +1,18 @@
 use {
   crate::{
-    arguments::Arguments, command::Command, course::Course,
-    extractor::Extractor, index::Index, payload::Payload, select::Select,
-    server::Server, subcommand::Subcommand,
+    arguments::Arguments, build::Build, course::Course, entry::Entry,
+    extractor::Extractor, index::Index, loader::Loader, page::Page,
+    params::Params, payload::Payload, select::Select, server::Server,
+    subcommand::Subcommand,
   },
   anyhow::anyhow,
-  axum::{extract::Query, response::IntoResponse, routing::get, Json, Router},
+  axum::{
+    extract::{Extension, Query},
+    http::StatusCode,
+    response::IntoResponse,
+    routing::get,
+    Json, Router,
+  },
   axum_server::Handle,
   clap::Parser,
   http::Method,
@@ -13,7 +20,13 @@ use {
   scraper::{ElementRef, Html, Selector},
   serde::{Deserialize, Serialize},
   std::{
-    collections::BTreeMap, fs, net::SocketAddr, path::PathBuf, process,
+    collections::BTreeMap,
+    fs,
+    net::SocketAddr,
+    path::PathBuf,
+    process,
+    sync::{Arc, Mutex},
+    thread,
     time::Instant,
   },
   tokio::runtime::Runtime,
@@ -21,11 +34,17 @@ use {
   uuid::Uuid,
 };
 
+const BASE_URL: &str = "https://www.mcgill.ca";
+
 mod arguments;
-mod command;
+mod build;
 mod course;
+mod entry;
 mod extractor;
 mod index;
+mod loader;
+mod page;
+mod params;
 mod payload;
 mod select;
 mod server;

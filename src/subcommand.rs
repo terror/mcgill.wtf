@@ -3,7 +3,7 @@ use super::*;
 #[derive(Debug, Parser)]
 pub(crate) enum Subcommand {
   /// Extract and download course data
-  Download(Extractor),
+  Download(Loader),
   /// Spawn the backend server
   Serve(Server),
 }
@@ -11,7 +11,7 @@ pub(crate) enum Subcommand {
 impl Subcommand {
   pub(crate) fn run(self) -> Result {
     match self {
-      Self::Download(extractor) => extractor.run(),
+      Self::Download(loader) => loader.run(),
       Self::Serve(server) => server.run(),
     }
   }

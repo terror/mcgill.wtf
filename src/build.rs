@@ -1,10 +1,10 @@
 use super::*;
 
-pub(crate) trait Command {
+pub(crate) trait Build {
   fn build(&mut self, arguments: &str) -> &mut Cmd;
 }
 
-impl Command for Cmd {
+impl Build for Cmd {
   fn build(&mut self, arguments: &str) -> &mut Self {
     arguments
       .trim()
