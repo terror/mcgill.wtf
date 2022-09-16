@@ -6,10 +6,9 @@ pub(crate) struct Index {
   courses: BTreeMap<String, Course>,
 }
 
-#[derive(Serialize)]
-struct Payload {
-  time: u128,
-  courses: Vec<Course>,
+#[derive(Deserialize)]
+pub(crate) struct Params {
+  query: String,
 }
 
 impl Index {
@@ -22,20 +21,17 @@ impl Index {
 
     let mut command = redis::cmd("FT.CREATE");
 
-    "
-      courses ON JSON PREFIX 1 course: NOOFFSETS
-      SCHEMA
-      $.title AS title TEXT WEIGHT 2
-      $.description AS description TEXT
-      $.subject AS subject TEXT NOSTEM WEIGHT 2
-      $.code AS code TEXT NOSTEM WEIGHT 2
-      $.level AS level TAG
-    "
-    .trim()
-    .split(' ')
-    .filter(|argument| !argument.is_empty())
-    .map(|argument| argument.trim())
-    .for_each(|argument| command = command.arg(argument).to_owned());
+    command.build(
+      "
+        courses ON JSON PREFIX 1 course: NOOFFSETS
+        SCHEMA
+        $.title AS title TEXT WEIGHT 2
+        $.description AS description TEXT
+        $.subject AS subject TEXT NOSTEM WEIGHT 2
+        $.code AS code TEXT NOSTEM WEIGHT 2
+        $.level AS level TAG
+      ",
+    );
 
     command.query(&mut client.get_connection()?)?;
 
@@ -67,23 +63,15 @@ impl Index {
 
   pub(crate) async fn search(
     self,
-    Path(params): Path<HashMap<String, String>>,
+    Query(params): Query<Params>,
   ) -> impl IntoResponse + 'static {
-    let query = params.get("q").unwrap();
+    let query = params.query;
 
-    log::info!("Received query: {:?}", query);
+    log::info!("Received query: {query}");
 
     let mut command = redis::cmd("FT.SEARCH");
 
-    for argument in format!("courses '{query}' RETURN 0 LIMIT 0 100")
-      .trim()
-      .split(' ')
-      .filter(|arg| !arg.is_empty())
-      .map(|arg| arg.trim())
-      .collect::<Vec<&str>>()
-    {
-      command = command.arg(argument).to_owned();
-    }
+    command.build(&format!("courses '{query}' RETURN 0 LIMIT 0 100"));
 
     let now = Instant::now();
 

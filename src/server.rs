@@ -11,7 +11,9 @@ pub(crate) struct Server {
 impl Server {
   pub(crate) fn run(self) -> Result {
     Runtime::new()?.block_on(async {
-      let search = Index::initialize(self.datasource)?;
+      log::info!("Initializing index...");
+
+      let index = Index::initialize(self.datasource)?;
 
       let addr = SocketAddr::from(([127, 0, 0, 1], self.port.unwrap_or(7500)));
 
@@ -23,8 +25,8 @@ impl Server {
           Router::new()
             .route("/", get(|| async { "Hello, world!" }))
             .route(
-              "/search/:q",
-              get(|params| async move { search.search(params).await }),
+              "/search",
+              get(|params| async move { index.search(params).await }),
             )
             .layer(
               CorsLayer::new()

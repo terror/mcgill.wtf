@@ -1,21 +1,19 @@
 use {
   crate::{
-    arguments::Arguments, course::Course, extractor::Extractor, index::Index,
-    select::Select, server::Server, subcommand::Subcommand,
+    arguments::Arguments, command::Command, course::Course,
+    extractor::Extractor, index::Index, payload::Payload, select::Select,
+    server::Server, subcommand::Subcommand,
   },
   anyhow::anyhow,
-  axum::{extract::Path, response::IntoResponse, routing::get, Json, Router},
+  axum::{extract::Query, response::IntoResponse, routing::get, Json, Router},
   axum_server::Handle,
   clap::Parser,
   http::Method,
+  redis::Cmd,
   scraper::{ElementRef, Html, Selector},
   serde::{Deserialize, Serialize},
   std::{
-    collections::{BTreeMap, HashMap},
-    fs,
-    net::SocketAddr,
-    path::PathBuf,
-    process,
+    collections::BTreeMap, fs, net::SocketAddr, path::PathBuf, process,
     time::Instant,
   },
   tokio::runtime::Runtime,
@@ -24,9 +22,11 @@ use {
 };
 
 mod arguments;
+mod command;
 mod course;
 mod extractor;
 mod index;
+mod payload;
 mod select;
 mod server;
 mod subcommand;

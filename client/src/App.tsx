@@ -38,7 +38,11 @@ const App: React.ElementType = () => {
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
 
   const handleChange = async (event: any) => {
-    setPayload(await (await fetch('/search/' + event.target.value)).json());
+    const res = await fetch('/search?query=' + event.target.value);
+    console.log(res);
+    const json = await res.json();
+    console.log(json);
+    setPayload(json);
   };
 
   return (
