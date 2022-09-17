@@ -105,8 +105,7 @@ impl Extractor {
         .split(' ')
         .skip(2)
         .collect::<Vec<&str>>()
-        .join(" ")
-        .to_owned(),
+        .join(" "),
       subject,
       code,
       level: entry.level,
