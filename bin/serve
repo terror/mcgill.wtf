@@ -7,12 +7,11 @@ DATASOURCE="data.json"
 LOCAL=false
 PORT=7501
 
-while getopts "c:d:l:p:" opt; do
+while getopts "c:d:l:" opt; do
   case ${opt} in
     c) CONTAINER="${OPTARG}";;
     d) DATASOURCE="${OPTARG}";;
     l) LOCAL=true;;
-    p) PORT="${OPTARG}";;
    \?) echo "Invalid option -$OPTARG" >&2 && exit 1;;
   esac
 done
@@ -23,14 +22,14 @@ if [[ $LOCAL ]]; then
   fi
 
   docker run --name "$CONTAINER" \
-    -d --rm -p "$PORT":6379 \
+    -d --rm -p $PORT:6379 \
     redis/redis-stack-server:latest redis-stack-server \
     --save
 else
   redis-server \
     --loadmodule /opt/redis-stack/lib/redisearch.so \
     --loadmodule /opt/redis-stack/lib/rejson.so \
-    --port "$PORT" \
+    --port $PORT \
     --save
 fi
 
