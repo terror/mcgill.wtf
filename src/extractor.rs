@@ -19,6 +19,14 @@ impl Extractor {
         .iter()
         .map(|entry| -> Result<Entry> {
           Ok(Entry {
+            department: entry
+              .select_single("span[class~='views-field-field-dept-code']")?
+              .select_single("span[class='field-content']")?
+              .inner_html(),
+            faculty: entry
+              .select_single("span[class~='views-field-field-faculty-code']")?
+              .select_single("span[class='field-content']")?
+              .inner_html(),
             level: entry
               .select_single("span[class~='views-field-level']")?
               .select_single("span[class='field-content']")?
@@ -28,7 +36,7 @@ impl Extractor {
               .select_single("span[class='field-content']")?
               .inner_html()
               .split(", ")
-              .map(|s| s.to_owned())
+              .map(|term| term.to_owned())
               .collect::<Vec<String>>(),
             url: format!(
               "{}{}",
@@ -110,21 +118,9 @@ impl Extractor {
       code,
       level: entry.level,
       url: entry.url,
-      department: content
-        .select_single("div[class='meta']")?
-        .select_single("p")?
-        .inner_html()
-        .split('(')
-        .take(1)
-        .collect::<Vec<&str>>()
-        .join(" ")
-        .split(':')
-        .skip(1)
-        .collect::<Vec<&str>>()
-        .join(" ")
-        .trim()
-        .to_owned(),
-      department_url: format!(
+      department: entry.department,
+      faculty: entry.faculty,
+      faculty_url: format!(
         "{}{}",
         BASE_URL,
         content
@@ -181,6 +177,10 @@ mod tests {
 
     let first = entries.first().unwrap();
 
+    assert_eq!(first.department, "Student Services");
+
+    assert_eq!(first.faculty, "School of Continuing Studies");
+
     assert_eq!(first.level, "Undergraduate");
 
     assert_eq!(first.terms, vec!["Fall 2022", "Winter 2023"]);
@@ -194,6 +194,8 @@ mod tests {
   #[test]
   fn course() {
     let entry = Entry {
+      department: "Computer Science".into(),
+      faculty: "Faculty of Science".into(),
       level: "Undergraduate".into(),
       terms: vec!["Fall 2022".into(), "Winter 2023".into()],
       url: "https://www.mcgill.ca/study/2022-2023/courses/comp-251".into(),
@@ -206,7 +208,8 @@ mod tests {
       level,
       url,
       department,
-      department_url,
+      faculty,
+      faculty_url,
       terms,
       description,
       instructors,
@@ -223,10 +226,12 @@ mod tests {
 
     assert_eq!(url, entry.url);
 
-    assert_eq!(department, "Computer Science");
+    assert_eq!(department, entry.department);
+
+    assert_eq!(faculty, entry.faculty);
 
     assert_eq!(
-      department_url,
+      faculty_url,
       "https://www.mcgill.ca/study/2022-2023/faculties/science"
     );
 

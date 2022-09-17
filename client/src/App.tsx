@@ -23,12 +23,13 @@ type Payload = {
 type Course = {
   id: string;
   title: string;
-  code: string;
   subject: string;
+  code: string;
   level: string;
   url: string;
   department: string;
-  department_url: string;
+  faculty: string;
+  faculty_url: string;
   terms: [string];
   description: string;
   instructors: string;
@@ -79,7 +80,10 @@ const App: React.ElementType = () => {
                       </Link>
                     </Text>
                     <Text fontSize='sm'>
-                      {course.department} | {course.level} |{' '}
+                      <Link href={course.faculty_url} isExternal>
+                        {course.faculty}
+                      </Link>{' '}
+                      | {course.department} | {course.level} |{' '}
                       {course.terms.join(', ')}
                     </Text>
                     <Text fontSize='sm'>{course.description}</Text>

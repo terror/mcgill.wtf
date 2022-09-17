@@ -16,8 +16,10 @@ pub(crate) struct Course {
   pub(crate) url: String,
   /// The department in which this course is offered, e.g. Management
   pub(crate) department: String,
-  /// Points to the department page in which this course is offered
-  pub(crate) department_url: String,
+  /// The faculty in which this course is offered, e.g. Science, Arts
+  pub(crate) faculty: String,
+  /// Points to the faculty page in which this course is offered
+  pub(crate) faculty_url: String,
   /// Terms in which this course is offered, e.g. Fall 2022, Winter 2023
   pub(crate) terms: Vec<String>,
   /// The full text description of the course
