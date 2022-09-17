@@ -52,7 +52,7 @@ impl Server {
     index: Extension<Arc<Index>>,
   ) -> impl IntoResponse {
     match index.search(&params.query) {
-      Ok(payload) => (StatusCode::OK, Json(Some(payload))),
+      Ok(payload) => (StatusCode::OK, Json(Some(payload.clone()))),
       Err(error) => {
         eprintln!("Error serving request for query {}: {error}", params.query);
         (StatusCode::INTERNAL_SERVER_ERROR, Json(None))

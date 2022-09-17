@@ -18,22 +18,12 @@ impl Loader {
 
     while let Some(entries) = Extractor::extract_page(Page {
       number: page,
-      content: reqwest::blocking::get(&format!(
-        "{}/study/2022-2023/courses/search?page={}",
-        BASE_URL, page
-      ))?
-      .text()?,
+      url: format!("{}/study/2022-2023/courses/search?page={}", BASE_URL, page),
     })? {
       courses.extend(
         entries
           .iter()
-          .map(|entry| {
-            Extractor::extract_course(
-              entry
-                .clone()
-                .set_content(&reqwest::blocking::get(&entry.url)?.text()?),
-            )
-          })
+          .map(|entry| Extractor::extract_course(entry.clone()))
           .collect::<Result<Vec<Course>, _>>()?,
       );
       page += 1;
