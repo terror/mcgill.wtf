@@ -3,7 +3,7 @@ use super::*;
 pub(crate) struct Extractor;
 
 impl Extractor {
-  pub(crate) fn extract_page(page: Page) -> Result<Option<Vec<Entry>>> {
+  pub(crate) fn page(page: Page) -> Result<Option<Vec<Entry>>> {
     log::info!("Parsing html on page: {}...", page.number);
 
     let html = Html::parse_fragment(&page.content()?);
@@ -61,7 +61,7 @@ impl Extractor {
     Ok(None)
   }
 
-  pub(crate) fn extract_course(entry: Entry) -> Result<Course> {
+  pub(crate) fn course(entry: Entry) -> Result<Course> {
     let html = Html::parse_fragment(&entry.content()?);
 
     let full_title = html
@@ -167,7 +167,7 @@ mod tests {
 
   #[test]
   fn page() {
-    let entries = Extractor::extract_page(Page {
+    let entries = Extractor::page(Page {
       number: 1,
       url: "https://www.mcgill.ca/study/2022-2023/courses/search".into(),
     })
@@ -175,15 +175,28 @@ mod tests {
 
     assert!(entries.is_some());
 
-    assert_eq!(entries.unwrap().len(), 16);
+    let entries = entries.unwrap();
+
+    assert_eq!(entries.len(), 16);
+
+    let first = entries.first().unwrap();
+
+    assert_eq!(first.level, "Undergraduate");
+
+    assert_eq!(first.terms, vec!["Fall 2022", "Winter 2023"]);
+
+    assert_eq!(
+      first.url,
+      "https://www.mcgill.ca/study/2022-2023/courses/aaaa-100"
+    );
   }
 
   #[test]
   fn course() {
     let entry = Entry {
       level: "Undergraduate".into(),
-      terms: vec!["Fall 2022".into(), "Winter 2022".into()],
-      url: "https://www.mcgill.ca/study/2022-2023/courses/cmsc-000".into(),
+      terms: vec!["Fall 2022".into(), "Winter 2023".into()],
+      url: "https://www.mcgill.ca/study/2022-2023/courses/comp-251".into(),
     };
 
     let Course {
@@ -195,31 +208,38 @@ mod tests {
       department,
       department_url,
       terms,
+      description,
       instructors,
       ..
-    } = Extractor::extract_course(entry.clone()).unwrap();
+    } = Extractor::course(entry.clone()).unwrap();
 
-    assert_eq!(title, "Foundations of Mathematics (3 credits)");
+    assert_eq!(title, "Algorithms and Data Structures (3 credits)");
 
-    assert_eq!(subject, "CMSC");
+    assert_eq!(subject, "COMP");
 
-    assert_eq!(code, "000");
+    assert_eq!(code, "251");
 
     assert_eq!(level, entry.level);
 
     assert_eq!(url, entry.url);
 
-    assert_eq!(terms, entry.terms);
-
-    assert_eq!(department, "Adaptive &amp; Integrated Learning");
+    assert_eq!(department, "Computer Science");
 
     assert_eq!(
       department_url,
-      "https://www.mcgill.ca/study/2022-2023/faculties/continuing"
+      "https://www.mcgill.ca/study/2022-2023/faculties/science"
     );
 
-    assert_eq!(terms, vec!["Fall 2022", "Winter 2022"]);
+    assert_eq!(terms, entry.terms);
 
-    assert_eq!(instructors, "Chouha, Paul (Fall)");
+    assert_eq!(
+      description,
+      "Introduction to algorithm design and analysis. Graph algorithms, greedy algorithms, data structures, dynamic programming, maximum flows."
+    );
+
+    assert_eq!(
+      instructors,
+      "Waldispuhl, Jérôme; Alberini, Giulia (Fall) Becerra, David (Winter)"
+    );
   }
 }

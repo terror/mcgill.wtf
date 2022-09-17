@@ -16,14 +16,14 @@ impl Loader {
 
     let mut page = self.starting_page.unwrap_or(0);
 
-    while let Some(entries) = Extractor::extract_page(Page {
+    while let Some(entries) = Extractor::page(Page {
       number: page,
       url: format!("{}/study/2022-2023/courses/search?page={}", BASE_URL, page),
     })? {
       courses.extend(
         entries
           .iter()
-          .map(|entry| Extractor::extract_course(entry.clone()))
+          .map(|entry| Extractor::course(entry.clone()))
           .collect::<Result<Vec<Course>, _>>()?,
       );
       page += 1;
