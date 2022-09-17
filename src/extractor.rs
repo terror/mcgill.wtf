@@ -8,65 +8,66 @@ impl Extractor {
 
     let html = Html::parse_fragment(&page.content()?);
 
-    if let Some(content) = html
+    let content = html
       .root_element()
-      .select_optional("div[class='view-content']")?
-    {
-      log::info!("Parsing found content on page {}...", page.number);
+      .select_optional("div[class='view-content']")?;
 
-      let results = content
-        .select_many("div[class~='views-row']")?
-        .iter()
-        .map(|entry| -> Result<Entry> {
-          Ok(Entry {
-            department: entry
-              .select_single("span[class~='views-field-field-dept-code']")?
-              .select_single("span[class='field-content']")?
-              .inner_html(),
-            faculty: entry
-              .select_single("span[class~='views-field-field-faculty-code']")?
-              .select_single("span[class='field-content']")?
-              .inner_html(),
-            level: entry
-              .select_single("span[class~='views-field-level']")?
-              .select_single("span[class='field-content']")?
-              .inner_html(),
-            terms: entry
-              .select_single("span[class~='views-field-terms']")?
-              .select_single("span[class='field-content']")?
-              .inner_html()
-              .split(", ")
-              .map(|term| term.to_owned())
-              .collect::<Vec<String>>(),
-            url: format!(
-              "{}{}",
-              BASE_URL,
-              entry
-                .select_single(
-                  "div[class~='views-field-field-course-title-long']",
-                )?
-                .select_single("a")?
-                .value()
-                .attr("href")
-                .ok_or_else(|| anyhow!("Failed to get attribute"))?
-            ),
-          })
-        })
-        .collect::<Result<Vec<Entry>, _>>();
-
-      let entries = results?
-        .into_iter()
-        .filter(|entry| !entry.terms.contains(&String::from("Not Offered")))
-        .collect::<Vec<Entry>>();
-
-      log::info!("Scraped entries on page {}: {:?}", page.number, entries);
-
-      return Ok(Some(entries));
+    if content.is_none() {
+      log::info!("Did not find any content on page {}", page.number);
+      return Ok(None);
     }
 
-    log::info!("Did not find any content on page {}", page.number);
+    log::info!("Parsing found content on page {}...", page.number);
 
-    Ok(None)
+    let results = content
+      .unwrap()
+      .select_many("div[class~='views-row']")?
+      .iter()
+      .map(|entry| -> Result<Entry> {
+        Ok(Entry {
+          department: entry
+            .select_single("span[class~='views-field-field-dept-code']")?
+            .select_single("span[class='field-content']")?
+            .inner_html(),
+          faculty: entry
+            .select_single("span[class~='views-field-field-faculty-code']")?
+            .select_single("span[class='field-content']")?
+            .inner_html(),
+          level: entry
+            .select_single("span[class~='views-field-level']")?
+            .select_single("span[class='field-content']")?
+            .inner_html(),
+          terms: entry
+            .select_single("span[class~='views-field-terms']")?
+            .select_single("span[class='field-content']")?
+            .inner_html()
+            .split(", ")
+            .map(|term| term.to_owned())
+            .collect::<Vec<String>>(),
+          url: format!(
+            "{}{}",
+            BASE_URL,
+            entry
+              .select_single(
+                "div[class~='views-field-field-course-title-long']",
+              )?
+              .select_single("a")?
+              .value()
+              .attr("href")
+              .ok_or_else(|| anyhow!("Failed to get attribute"))?
+          ),
+        })
+      })
+      .collect::<Result<Vec<Entry>, _>>();
+
+    let entries = results?
+      .into_iter()
+      .filter(|entry| !entry.terms.contains(&String::from("Not Offered")))
+      .collect::<Vec<Entry>>();
+
+    log::info!("Scraped entries on page {}: {:?}", page.number, entries);
+
+    Ok(Some(entries))
   }
 
   pub(crate) fn course(entry: Entry) -> Result<Course> {
@@ -159,7 +160,7 @@ impl Extractor {
 
 #[cfg(test)]
 mod tests {
-  use {super::*, pretty_assertions::assert_eq};
+  use {super::*, pretty_assertions::assert_eq, unindent::Unindent};
 
   #[test]
   fn page() {
@@ -179,7 +180,7 @@ mod tests {
 
     assert_eq!(first.department, "Student Services");
 
-    assert_eq!(first.faculty, "School of Continuing Studies");
+    assert_eq!(first.faculty, "00");
 
     assert_eq!(first.level, "Undergraduate");
 
@@ -239,7 +240,15 @@ mod tests {
 
     assert_eq!(
       description,
-      "Introduction to algorithm design and analysis. Graph algorithms, greedy algorithms, data structures, dynamic programming, maximum flows."
+      "
+        Introduction to algorithm design and analysis.
+        Graph algorithms, greedy algorithms,
+        data structures, dynamic programming,
+        maximum flows.
+      "
+      .unindent()
+      .replace('\n', " ")
+      .trim()
     );
 
     assert_eq!(
