@@ -42,14 +42,14 @@ type Course = {
 
 const App: React.ElementType = () => {
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
+
   const [error, setError] = useState<string | undefined>(undefined);
-  const [value, setValue] = useState<string>('');
 
   const handleChange = async (event: any) => {
     try {
-      const value = event.target.value;
-      setValue(value);
-      setPayload(await (await fetch('/search?query=' + value)).json());
+      setPayload(
+        await (await fetch('/search?query=' + event.target.value)).json()
+      );
     } catch (error) {
       let message = 'Unknown Error';
       if (error instanceof Error) message = error.message;
@@ -70,7 +70,7 @@ const App: React.ElementType = () => {
           A low-latency full-text search of mcgill's entire course catalog
         </Text>
         <Text>
-          Try queries like{' '}
+          Try out queries like{' '}
           <Text as='span' fontWeight='bold'>
             @subject:comp
           </Text>
@@ -83,16 +83,13 @@ const App: React.ElementType = () => {
             @level:&#123;undergraduate&#125;
           </Text>
         </Text>
+        <br />
         <InputGroup>
           <InputLeftElement
             pointerEvents='none'
             children={<SearchIcon color='gray.300' />}
           />
-          <Input
-            placeholder='Search for a course'
-            value={value}
-            onChange={(event) => handleChange(event)}
-          />
+          <Input placeholder='Search for a course' onChange={handleChange} />
         </InputGroup>
         <Stack alignItems='right' width='100%'>
           {payload && (
@@ -119,10 +116,10 @@ const App: React.ElementType = () => {
                     </Text>
                     <Text fontSize='sm'>
                       <Link href={course.faculty_url} isExternal>
-                        {course.faculty}
+                        {course.faculty.replace('&amp;', ' & ')}
                       </Link>{' '}
-                      | {course.department} | {course.level} |{' '}
-                      {course.terms.join(', ')}
+                      | {course.department.replace('&amp;', ' & ')} |{' '}
+                      {course.level} | {course.terms.join(', ')}
                     </Text>
                     <Text fontSize='sm'>{course.description}</Text>
                     <Text fontSize='sm'>{course.instructors}</Text>
