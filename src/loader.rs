@@ -27,7 +27,13 @@ impl Loader {
       courses.extend(
         entries
           .iter()
-          .map(|entry| Extractor::extract_course(entry.clone()))
+          .map(|entry| {
+            Extractor::extract_course(
+              entry
+                .clone()
+                .set_content(&reqwest::blocking::get(&entry.url)?.text()?),
+            )
+          })
           .collect::<Result<Vec<Course>, _>>()?,
       );
       page += 1;
