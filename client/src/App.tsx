@@ -5,15 +5,20 @@ import {
   AlertIcon,
   Box,
   Center,
+  Container,
   Flex,
   Heading,
   Image,
   Input,
+  InputGroup,
+  InputLeftElement,
   Link,
   Stack,
   Text,
   Wrap,
 } from '@chakra-ui/react';
+
+import { SearchIcon } from '@chakra-ui/icons';
 
 type Payload = {
   time: number;
@@ -37,13 +42,19 @@ type Course = {
 
 const App: React.ElementType = () => {
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [value, setValue] = useState<string>('');
 
   const handleChange = async (event: any) => {
-    const res = await fetch('/search?query=' + event.target.value);
-    console.log(res);
-    const json = await res.json();
-    console.log(json);
-    setPayload(json);
+    try {
+      const value = event.target.value;
+      setValue(value);
+      setPayload(await (await fetch('/search?query=' + value)).json());
+    } catch (error) {
+      let message = 'Unknown Error';
+      if (error instanceof Error) message = error.message;
+      setError(message);
+    }
   };
 
   return (
@@ -58,15 +69,42 @@ const App: React.ElementType = () => {
         <Text>
           A low-latency full-text search of mcgill's entire course catalog
         </Text>
-        <Input
-          placeholder='Search for a course'
-          onChange={(event) => handleChange(event)}
-        />
-        <Stack alignItems='right'>
+        <Text>
+          Try queries like{' '}
+          <Text as='span' fontWeight='bold'>
+            @subject:comp
+          </Text>
+          ,{' '}
+          <Text as='span' fontWeight='bold'>
+            @code:251
+          </Text>
+          ,{' '}
+          <Text as='span' fontWeight='bold'>
+            @level:&#123;undergraduate&#125;
+          </Text>
+        </Text>
+        <InputGroup>
+          <InputLeftElement
+            pointerEvents='none'
+            children={<SearchIcon color='gray.300' />}
+          />
+          <Input
+            placeholder='Search for a course'
+            value={value}
+            onChange={(event) => handleChange(event)}
+          />
+        </InputGroup>
+        <Stack alignItems='right' width='100%'>
           {payload && (
             <Alert status='success'>
               <AlertIcon />
               Found {payload.courses.length} results ({payload.time} ms)
+            </Alert>
+          )}
+          {error && (
+            <Alert status='error'>
+              <AlertIcon />
+              error: {error}
             </Alert>
           )}
           {payload &&
