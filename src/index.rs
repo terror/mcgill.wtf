@@ -1,7 +1,5 @@
 use super::*;
 
-use std::cell::RefCell;
-
 #[derive(Debug, Clone)]
 pub(crate) struct Index {
   client: redis::Client,
