@@ -29,11 +29,8 @@ const App: React.ElementType = () => {
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const handleInputChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleInputChange = async (value: string) => {
     try {
-      const value = event.target.value;
       setPayload(await search(value));
       setValue(value);
     } catch (error) {
@@ -42,7 +39,7 @@ const App: React.ElementType = () => {
   };
 
   const handleExampleClick = (index: number) => {
-    setValue(examples[index]);
+    handleInputChange(examples[index]);
   };
 
   const examples = ['@subject:comp', '@code:251', '@level:{undergraduate}'];
@@ -82,7 +79,9 @@ const App: React.ElementType = () => {
           <Input
             value={value}
             placeholder='Search for a course'
-            onChange={handleInputChange}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              handleInputChange(event.target.value)
+            }
           />
         </InputGroup>
         <Stack alignItems='right' width='100%'>
