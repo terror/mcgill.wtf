@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useReducer } from 'react';
 
 import {
   Alert,
@@ -19,43 +19,33 @@ import {
 } from '@chakra-ui/react';
 
 import { SearchIcon } from '@chakra-ui/icons';
-
-type Payload = {
-  time: number;
-  courses: [Course];
-};
-
-type Course = {
-  id: string;
-  title: string;
-  subject: string;
-  code: string;
-  level: string;
-  url: string;
-  department: string;
-  faculty: string;
-  faculty_url: string;
-  terms: [string];
-  description: string;
-  instructors: string;
-};
+import { Course } from './components/Course';
+import { Payload } from './lib/payload';
+import { Course as CourseType } from './lib/course';
+import { search } from './lib/search';
 
 const App: React.ElementType = () => {
+  const [value, setValue] = useState<string>('');
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
-
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const handleChange = async (event: any) => {
+  const handleInputChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     try {
-      setPayload(
-        await (await fetch('/search?query=' + event.target.value)).json()
-      );
+      const value = event.target.value;
+      setPayload(await search(value));
+      setValue(value);
     } catch (error) {
-      let message = 'Unknown Error';
-      if (error instanceof Error) message = error.message;
-      setError(message);
+      setError(error instanceof Error ? error.message : 'Unknown Error');
     }
   };
+
+  const handleExampleClick = (index: number) => {
+    setValue(examples[index]);
+  };
+
+  const examples = ['@subject:comp', '@code:251', '@level:{undergraduate}'];
 
   return (
     <Center padding='1em'>
@@ -64,24 +54,24 @@ const App: React.ElementType = () => {
           <Heading as='h1' size='2xl'>
             mcgill.wtf
           </Heading>
-          <Image src='./src/assets/mcgill.png' width='4em' />
+          <Image src='./mcgill.png' width='4em' />
         </Wrap>
         <Text>
           A low-latency full-text search of mcgill's entire course catalog
         </Text>
         <Text>
-          Try out queries like{' '}
-          <Text as='span' fontWeight='bold'>
-            @subject:comp
-          </Text>
-          ,{' '}
-          <Text as='span' fontWeight='bold'>
-            @code:251
-          </Text>
-          ,{' '}
-          <Text as='span' fontWeight='bold'>
-            @level:&#123;undergraduate&#125;
-          </Text>
+          Try out queries like
+          {examples.map((example: string, index: number) => (
+            <Text
+              key={index}
+              as='span'
+              fontWeight='bold'
+              onClick={() => handleExampleClick(index)}
+            >
+              {' '}
+              <Link style={{ textDecoration: 'none' }}>{example}</Link>
+            </Text>
+          ))}
         </Text>
         <br />
         <InputGroup>
@@ -89,7 +79,11 @@ const App: React.ElementType = () => {
             pointerEvents='none'
             children={<SearchIcon color='gray.300' />}
           />
-          <Input placeholder='Search for a course' onChange={handleChange} />
+          <Input
+            value={value}
+            placeholder='Search for a course'
+            onChange={handleInputChange}
+          />
         </InputGroup>
         <Stack alignItems='right' width='100%'>
           {payload && (
@@ -105,27 +99,8 @@ const App: React.ElementType = () => {
             </Alert>
           )}
           {payload &&
-            payload.courses.map((course: Course, _: number) => {
-              return (
-                <Flex>
-                  <Box ml='3'>
-                    <Text fontWeight='bold'>
-                      <Link href={course.url} isExternal>
-                        {course.subject} {course.code}: {course.title}
-                      </Link>
-                    </Text>
-                    <Text fontSize='sm'>
-                      <Link href={course.faculty_url} isExternal>
-                        {course.faculty.replace('&amp;', ' & ')}
-                      </Link>{' '}
-                      | {course.department.replace('&amp;', ' & ')} |{' '}
-                      {course.level} | {course.terms.join(', ')}
-                    </Text>
-                    <Text fontSize='sm'>{course.description}</Text>
-                    <Text fontSize='sm'>{course.instructors}</Text>
-                  </Box>
-                </Flex>
-              );
+            payload.courses.map((course: CourseType, index: number) => {
+              return <Course key={index} course={course} />;
             })}
         </Stack>
       </Stack>
