@@ -1,6 +1,6 @@
 use {
   crate::{
-    arguments::Arguments, build::Build, course::Course, entry::Entry,
+    arguments::Arguments, cmd_ext::CmdExt, course::Course, entry::Entry,
     extractor::Extractor, index::Index, loader::Loader, page::Page,
     params::Params, payload::Payload, select::Select, server::Server,
     subcommand::Subcommand,
@@ -37,7 +37,7 @@ use {
 const BASE_URL: &str = "https://www.mcgill.ca";
 
 mod arguments;
-mod build;
+mod cmd_ext;
 mod course;
 mod entry;
 mod extractor;
