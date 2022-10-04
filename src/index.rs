@@ -79,7 +79,8 @@ impl Index {
     let identifiers =
       command.query::<Vec<String>>(&mut self.client.get_connection()?)?;
 
-    let elapsed = now.elapsed().as_millis();
+    let elapsed =
+      f64::trunc((now.elapsed().as_secs_f64() * 1000.0) * 100.0) / 100.0;
 
     Ok(Payload {
       time: elapsed,
