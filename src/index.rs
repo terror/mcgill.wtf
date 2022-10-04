@@ -37,14 +37,14 @@ impl Index {
 
     let mut pipeline = redis::Pipeline::new();
 
-    serde_json::from_str::<Vec<Course>>(&match datasource
-      .display()
-      .to_string()
-      .starts_with("http")
-    {
-      true => blocking::get(datasource.display().to_string())?.text()?,
-      false => fs::read_to_string(datasource)?,
-    })?
+    let datasource = datasource.display().to_string();
+
+    serde_json::from_str::<Vec<Course>>(
+      &match datasource.starts_with("http") {
+        true => blocking::get(datasource)?.text()?,
+        false => fs::read_to_string(datasource)?,
+      },
+    )?
     .iter()
     .try_for_each(|course| -> Result {
       log::info!("Writing course {}{}", course.subject, course.code);
