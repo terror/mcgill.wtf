@@ -37,27 +37,34 @@ impl Index {
 
     let mut pipeline = redis::Pipeline::new();
 
-    serde_json::from_str::<Vec<Course>>(&fs::read_to_string(datasource)?)?
-      .iter()
-      .try_for_each(|course| -> Result {
-        log::info!("Writing course {}{}", course.subject, course.code);
+    serde_json::from_str::<Vec<Course>>(&match datasource
+      .display()
+      .to_string()
+      .starts_with("http")
+    {
+      true => blocking::get(datasource.display().to_string())?.text()?,
+      false => fs::read_to_string(datasource)?,
+    })?
+    .iter()
+    .try_for_each(|course| -> Result {
+      log::info!("Writing course {}{}", course.subject, course.code);
 
-        self
-          .courses
-          .lock()
-          .unwrap()
-          .borrow_mut()
-          .insert(format!("course:{}", course.id), course.clone());
+      self
+        .courses
+        .lock()
+        .unwrap()
+        .borrow_mut()
+        .insert(format!("course:{}", course.id), course.clone());
 
-        pipeline
-          .cmd("JSON.SET")
-          .arg(format!("course:{}", course.id))
-          .arg("$")
-          .arg(serde_json::to_string(&course)?)
-          .query(&mut self.client.get_connection()?)?;
+      pipeline
+        .cmd("JSON.SET")
+        .arg(format!("course:{}", course.id))
+        .arg("$")
+        .arg(serde_json::to_string(&course)?)
+        .query(&mut self.client.get_connection()?)?;
 
-        Ok(())
-      })
+      Ok(())
+    })
   }
 
   pub(crate) fn search(&self, query: &str) -> Result<Payload> {

@@ -7,8 +7,9 @@ DATASOURCE="data.json"
 LOCAL=false
 PORT=7501
 
-while getopts "c:d:l:" opt; do
+while getopts "a:c:d:l:" opt; do
   case ${opt} in
+    a) ASSETS="${OPTARG}";;
     c) CONTAINER="${OPTARG}";;
     d) DATASOURCE="${OPTARG}";;
     l) LOCAL=true;;
@@ -16,7 +17,7 @@ while getopts "c:d:l:" opt; do
   esac
 done
 
-if [[ $LOCAL ]]; then
+if [[ $LOCAL = true ]]; then
   if docker ps | grep "$CONTAINER"; then
     docker kill "$CONTAINER"
   fi
@@ -25,12 +26,21 @@ if [[ $LOCAL ]]; then
     -d --rm -p $PORT:6379 \
     redis/redis-stack-server:latest redis-stack-server \
     --save
+
+  cargo run serve --datasource="$DATASOURCE"
 else
   redis-server \
     --loadmodule /opt/redis-stack/lib/redisearch.so \
     --loadmodule /opt/redis-stack/lib/rejson.so \
     --port $PORT \
-    --save
-fi
+    --save &
 
-cargo run serve --datasource="$DATASOURCE"
+  while true; do
+    if redis-cli -h localhost -p $PORT ping; then break; fi
+    sleep 1
+  done
+
+  mv "$ASSETS"/assets/* "$ASSETS"
+
+  server serve --assets="$ASSETS" --datasource="$DATASOURCE"
+fi

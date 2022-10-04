@@ -2,6 +2,8 @@ use super::*;
 
 #[derive(Debug, Parser)]
 pub(crate) struct Server {
+  #[clap(long, help = "Optional static file directory path.")]
+  assets: Option<PathBuf>,
   #[clap(long, help = "Datasource to read from.")]
   datasource: PathBuf,
   #[clap(long, help = "Optional port to listen on.")]
@@ -23,7 +25,7 @@ impl Server {
         }
       });
 
-      let addr = SocketAddr::from(([127, 0, 0, 1], self.port.unwrap_or(7500)));
+      let addr = "[::]:7500".parse::<SocketAddr>()?;
 
       log::info!("Listening on port {}...", addr.port());
 
@@ -31,8 +33,8 @@ impl Server {
         .handle(Handle::new())
         .serve(
           Router::new()
-            .route("/", get(|| async { "Hello, world!" }))
             .route("/search", get(Self::search))
+            .merge(SpaRouter::new("/assets", self.assets.unwrap_or_default()))
             .layer(Extension(index))
             .layer(
               CorsLayer::new()

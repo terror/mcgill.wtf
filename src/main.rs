@@ -13,10 +13,12 @@ use {
     routing::get,
     Json, Router,
   },
+  axum_extra::routing::SpaRouter,
   axum_server::Handle,
   clap::Parser,
   http::Method,
   redis::Cmd,
+  reqwest::blocking,
   scraper::{ElementRef, Html, Selector},
   serde::{Deserialize, Serialize},
   std::{
