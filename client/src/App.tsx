@@ -51,7 +51,7 @@ const App: React.ElementType = () => {
           <Heading as='h1' size='2xl'>
             mcgill.wtf
           </Heading>
-          <Image src='./mcgill.png' width='4em' />
+          <Image src='/assets/mcgill.png' width='4em' />
         </Wrap>
         <Text>
           A low-latency full-text search of mcgill's entire course catalog

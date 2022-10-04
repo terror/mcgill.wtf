@@ -17,7 +17,7 @@ container:
   docker build -t mcgill.wtf .
 
 develop:
-  docker run -it --rm -p 7500:7500 mcgill.wtf
+  docker run -d --rm --name mcgill.wtf -p 7500:7500 mcgill.wtf
 
 download start='0':
   RUST_LOG=info just run download --starting-page {{start}} && \

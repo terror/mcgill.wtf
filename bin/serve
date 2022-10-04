@@ -2,6 +2,8 @@
 
 set -euox pipefail
 
+export RUST_LOG=info
+
 CONTAINER="mcgill.wtf-redis"
 DATASOURCE="data.json"
 LOCAL=false
