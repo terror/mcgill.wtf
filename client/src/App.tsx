@@ -70,7 +70,6 @@ const App: React.ElementType = () => {
             </Text>
           ))}
         </Text>
-        <br />
         <InputGroup>
           <InputLeftElement
             pointerEvents='none'

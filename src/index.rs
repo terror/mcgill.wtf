@@ -72,7 +72,10 @@ impl Index {
 
     let mut command = redis::cmd("FT.SEARCH");
 
-    command.build(&format!("courses '{query}' RETURN 0 LIMIT 0 100"));
+    command.build(&format!(
+      "courses '{}' RETURN 0 LIMIT 0 100",
+      query.split(' ').collect::<Vec<&str>>().join(r"\")
+    ));
 
     let now = Instant::now();
 
