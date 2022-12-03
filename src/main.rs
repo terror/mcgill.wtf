@@ -22,7 +22,6 @@ use {
   scraper::{ElementRef, Html, Selector},
   serde::{Deserialize, Serialize},
   std::{
-    cell::RefCell,
     collections::BTreeMap,
     fs,
     net::SocketAddr,
