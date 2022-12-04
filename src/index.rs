@@ -3,14 +3,14 @@ use super::*;
 #[derive(Debug, Clone)]
 pub(crate) struct Index {
   client: redis::Client,
-  courses: Arc<Mutex<RefCell<BTreeMap<String, Course>>>>,
+  courses: Arc<Mutex<BTreeMap<String, Course>>>,
 }
 
 impl Index {
   pub(crate) fn open() -> Result<Self> {
     Ok(Self {
       client: redis::Client::open("redis://localhost:7501")?,
-      courses: Arc::new(Mutex::new(RefCell::new(BTreeMap::new()))),
+      courses: Arc::new(Mutex::new(BTreeMap::new())),
     })
   }
 
@@ -53,7 +53,6 @@ impl Index {
         .courses
         .lock()
         .unwrap()
-        .borrow_mut()
         .insert(format!("course:{}", course.id), course.clone());
 
       pipeline
@@ -94,7 +93,6 @@ impl Index {
             .courses
             .lock()
             .unwrap()
-            .borrow_mut()
             .get(identifier)
             .cloned()
             .ok_or_else(|| {
