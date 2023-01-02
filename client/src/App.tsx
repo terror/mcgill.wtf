@@ -14,14 +14,15 @@ import {
   InputLeftElement,
   Link,
   Stack,
+  StackItem,
   Text,
   Wrap,
 } from '@chakra-ui/react';
 
-import { SearchIcon } from '@chakra-ui/icons';
+import { Course as CourseType } from './lib/course';
 import { Course } from './components/Course';
 import { Payload } from './lib/payload';
-import { Course as CourseType } from './lib/course';
+import { SearchIcon } from '@chakra-ui/icons';
 import { search } from './lib/search';
 
 const App: React.ElementType = () => {
@@ -51,7 +52,7 @@ const App: React.ElementType = () => {
           <Heading as='h1' size='2xl'>
             mcgill.wtf
           </Heading>
-          <Image src='/assets/mcgill.png' width='4em' />
+          <Image src='/assets/mcgill.png' width='3.5rem' />
         </Wrap>
         <Text>
           A low-latency full-text search of mcgill's entire course catalog
@@ -85,15 +86,15 @@ const App: React.ElementType = () => {
         </InputGroup>
         <Stack alignItems='right' width='100%'>
           {payload && (
-            <Alert status='success'>
+            <Alert status='success' borderRadius='0.5rem'>
               <AlertIcon />
               Found {payload.courses.length} results ({payload.time} ms)
             </Alert>
           )}
           {error && (
-            <Alert status='error'>
+            <Alert status='error' borderRadius='0.5rem'>
               <AlertIcon />
-              error: {error}
+              {error}
             </Alert>
           )}
           {payload &&
