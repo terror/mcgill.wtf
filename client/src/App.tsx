@@ -27,10 +27,10 @@ import { search } from './lib/search';
 
 function debounce(f, delay) {
   let lastTimeout = null;
-  return () => {
+  return (value: string) => {
     if (lastTimeout) clearTimeout(lastTimeout);
     lastTimeout = setTimeout(() => {
-      f();
+      f(value);
     }, delay);
   };
 }
