@@ -25,19 +25,29 @@ import { Payload } from './lib/payload';
 import { SearchIcon } from '@chakra-ui/icons';
 import { search } from './lib/search';
 
+function debounce(f, delay) {
+  let lastTimeout = null;
+  return () => {
+    if (lastTimeout) clearTimeout(lastTimeout);
+    lastTimeout = setTimeout(() => {
+      f();
+    }, delay);
+  };
+}
+
 const App: React.ElementType = () => {
   const [value, setValue] = useState<string>('');
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const handleInputChange = async (value: string) => {
+  const handleInputChange = debounce(async (value: string) => {
     try {
       setPayload(await search(value));
       setValue(value);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Unknown Error');
     }
-  };
+  }, 150);
 
   const handleExampleClick = (index: number) => {
     handleInputChange(examples[index]);
