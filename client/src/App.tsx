@@ -1,4 +1,4 @@
-import React, { useState, useReducer, useCallback, useRef} from 'react';
+import React, { useState, useReducer, useCallback, useRef } from 'react';
 
 import {
   Alert,
@@ -25,7 +25,7 @@ import { Payload } from './lib/payload';
 import { SearchIcon } from '@chakra-ui/icons';
 import { search } from './lib/search';
 
-function debounce(f: (v: string) => void, delay: number) {
+const debounce = (f: (v: string) => void, delay: number) => {
   let lastTimeout: number = 0;
   return (value: string) => {
     if (lastTimeout) clearTimeout(lastTimeout);
@@ -33,20 +33,23 @@ function debounce(f: (v: string) => void, delay: number) {
       f(value);
     }, delay);
   };
-}
+};
 
 const App: React.ElementType = () => {
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = useCallback(debounce(async (value: string) => {
-    try {
-      setPayload(await search(value));
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unknown Error');
-    }
-  }, 150), []);
+  const handleInputChange = useCallback(
+    debounce(async (value: string) => {
+      try {
+        setPayload(await search(value));
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Unknown Error');
+      }
+    }, 150),
+    []
+  );
 
   const handleExampleClick = (index: number) => {
     if (inputRef.current) inputRef.current.value = examples[index];
