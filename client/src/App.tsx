@@ -1,4 +1,4 @@
-import React, { useState, useReducer } from 'react';
+import React, { useState, useReducer, useCallback, useRef } from 'react';
 
 import {
   Alert,
@@ -25,21 +25,34 @@ import { Payload } from './lib/payload';
 import { SearchIcon } from '@chakra-ui/icons';
 import { search } from './lib/search';
 
+const debounce = (f: (v: string) => void, delay: number) => {
+  let lastTimeout: number = 0;
+  return (value: string) => {
+    if (lastTimeout) clearTimeout(lastTimeout);
+    lastTimeout = setTimeout(() => {
+      f(value);
+    }, delay);
+  };
+};
+
 const App: React.ElementType = () => {
-  const [value, setValue] = useState<string>('');
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = async (value: string) => {
-    try {
-      setPayload(await search(value));
-      setValue(value);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unknown Error');
-    }
-  };
+  const handleInputChange = useCallback(
+    debounce(async (value: string) => {
+      try {
+        setPayload(await search(value));
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Unknown Error');
+      }
+    }, 150),
+    []
+  );
 
   const handleExampleClick = (index: number) => {
+    if (inputRef.current) inputRef.current.value = examples[index];
     handleInputChange(examples[index]);
   };
 
@@ -77,11 +90,11 @@ const App: React.ElementType = () => {
             children={<SearchIcon color='gray.300' />}
           />
           <Input
-            value={value}
             placeholder='Search for a course'
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange(event.target.value)
             }
+            ref={inputRef}
           />
         </InputGroup>
         <Stack alignItems='right' width='100%'>
