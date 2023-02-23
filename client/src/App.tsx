@@ -25,8 +25,8 @@ import { Payload } from './lib/payload';
 import { SearchIcon } from '@chakra-ui/icons';
 import { search } from './lib/search';
 
-function debounce(f, delay) {
-  let lastTimeout = null;
+function debounce(f: (v: string) => void, delay: number) {
+  let lastTimeout: number = 0;
   return (value: string) => {
     if (lastTimeout) clearTimeout(lastTimeout);
     lastTimeout = setTimeout(() => {
@@ -36,14 +36,12 @@ function debounce(f, delay) {
 }
 
 const App: React.ElementType = () => {
-  const [value, setValue] = useState<string>('');
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
 
   const handleInputChange = debounce(async (value: string) => {
     try {
       setPayload(await search(value));
-      setValue(value);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Unknown Error');
     }
@@ -87,7 +85,6 @@ const App: React.ElementType = () => {
             children={<SearchIcon color='gray.300' />}
           />
           <Input
-            value={value}
             placeholder='Search for a course'
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange(event.target.value)
