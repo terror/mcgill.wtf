@@ -1,4 +1,4 @@
-import React, { useState, useReducer, useCallback } from 'react';
+import React, { useState, useReducer, useCallback, useRef} from 'react';
 
 import {
   Alert,
@@ -38,6 +38,7 @@ function debounce(f: (v: string) => void, delay: number) {
 const App: React.ElementType = () => {
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = useCallback(debounce(async (value: string) => {
     try {
@@ -48,6 +49,7 @@ const App: React.ElementType = () => {
   }, 150), []);
 
   const handleExampleClick = (index: number) => {
+    if (inputRef.current) inputRef.current.value = examples[index];
     handleInputChange(examples[index]);
   };
 
@@ -89,6 +91,7 @@ const App: React.ElementType = () => {
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange(event.target.value)
             }
+            ref={inputRef}
           />
         </InputGroup>
         <Stack alignItems='right' width='100%'>
