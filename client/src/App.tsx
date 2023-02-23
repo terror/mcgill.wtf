@@ -1,4 +1,4 @@
-import React, { useState, useReducer } from 'react';
+import React, { useState, useReducer, useCallback } from 'react';
 
 import {
   Alert,
@@ -39,13 +39,13 @@ const App: React.ElementType = () => {
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const handleInputChange = debounce(async (value: string) => {
+  const handleInputChange = useCallback(debounce(async (value: string) => {
     try {
       setPayload(await search(value));
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Unknown Error');
     }
-  }, 150);
+  }, 150), []);
 
   const handleExampleClick = (index: number) => {
     handleInputChange(examples[index]);
