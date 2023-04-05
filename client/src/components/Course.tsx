@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Flex, Link, Text } from '@chakra-ui/react';
+import { Box, Link, Text } from '@chakra-ui/react';
 import { Course as CourseType } from '../lib/course';
 
 interface CourseProps {
@@ -14,7 +14,7 @@ export const Course: React.ElementType = (props: CourseProps) => {
           {props.course.subject} {props.course.code}: {props.course.title}
         </Link>
       </Text>
-      <Text fontSize='sm'>
+      <Text fontWeight='medium' fontSize='sm'>
         <Link href={props.course.faculty_url} isExternal>
           {props.course.faculty.replace('&amp;', ' & ')}
         </Link>{' '}
@@ -22,7 +22,7 @@ export const Course: React.ElementType = (props: CourseProps) => {
         {props.course.level} | {props.course.terms.join(', ')}
       </Text>
       <Text fontSize='sm'>{props.course.description}</Text>
-      <Text fontSize='sm'>{props.course.instructors}</Text>
+      <Text fontWeight='medium' fontSize='sm'>{props.course.instructors}</Text>
     </Box>
   );
 };
