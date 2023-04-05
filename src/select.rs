@@ -37,8 +37,7 @@ impl<'a> Select<'a> for ElementRef<'a> {
             anyhow!("Failed to parse selector: {:?}", error)
           })?,
         )
-        .into_iter()
-        .collect::<Vec<ElementRef<'a>>>(),
+        .collect(),
     )
   }
 }

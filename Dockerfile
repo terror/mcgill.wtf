@@ -6,7 +6,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM rust:1.63.0 as builder
+FROM rust:latest as builder
 
 WORKDIR /usr/src/app
 COPY . .
@@ -28,4 +28,11 @@ COPY --from=builder /usr/src/app/bin/serve /usr/bin
 COPY --from=builder /usr/src/app/target/release/server /usr/bin
 COPY --from=client /app/client/dist assets
 
-CMD serve -a assets -d https://s3.amazonaws.com/mcgill.wtf/data.json
+# https://community.fly.io/t/swap-memory/2749
+
+CMD if [[ ! -z "$SWAP" ]]; then \
+  fallocate -l $(($(stat -f -c "(%a*%s/10)*7" .))) _swapfile && \
+  mkswap _swapfile && swapon _swapfile && ls -hla; \
+  fi; \
+  free -m; \
+  serve -a assets -d https://s3.amazonaws.com/mcgill.wtf/data.json
