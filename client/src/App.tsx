@@ -1,12 +1,9 @@
-import React, { useState, useReducer, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 
 import {
   Alert,
   AlertIcon,
-  Box,
   Center,
-  Container,
-  Flex,
   Heading,
   Image,
   Input,
@@ -14,7 +11,6 @@ import {
   InputLeftElement,
   Link,
   Stack,
-  StackItem,
   Text,
   Wrap,
 } from '@chakra-ui/react';
@@ -23,17 +19,8 @@ import { Course as CourseType } from './lib/course';
 import { Course } from './components/Course';
 import { Payload } from './lib/payload';
 import { SearchIcon } from '@chakra-ui/icons';
+import { debounce } from './lib/utils';
 import { search } from './lib/search';
-
-const debounce = (f: (v: string) => void, delay: number) => {
-  let lastTimeout: number = 0;
-  return (value: string) => {
-    if (lastTimeout) clearTimeout(lastTimeout);
-    lastTimeout = setTimeout(() => {
-      f(value);
-    }, delay);
-  };
-};
 
 const App: React.ElementType = () => {
   const [payload, setPayload] = useState<Payload | undefined>(undefined);
@@ -47,7 +34,7 @@ const App: React.ElementType = () => {
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Unknown Error');
       }
-    }, 150),
+    }, 50),
     []
   );
 
@@ -56,21 +43,21 @@ const App: React.ElementType = () => {
     handleInputChange(examples[index]);
   };
 
-  const examples = ['@subject:comp', '@code:251', '@level:{undergraduate}'];
+  const examples = ['@subject:comp', '@code:251', '@level:{graduate}'];
 
   return (
     <Center padding='1em'>
-      <Stack alignItems='center' width='50%'>
+      <Stack alignItems='center' width='60%'>
         <Wrap>
           <Heading as='h1' size='2xl'>
             mcgill.wtf
           </Heading>
           <Image src='/assets/mcgill.png' width='3.5rem' />
         </Wrap>
-        <Text>
+        <Text fontWeight='medium'>
           A low-latency full-text search of mcgill's entire course catalog
         </Text>
-        <Text>
+        <Text fontWeight='medium'>
           Try out queries like
           {examples.map((example: string, index: number) => (
             <Text

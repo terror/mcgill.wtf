@@ -1,16 +1,15 @@
 app = "mcgill-wtf"
+
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
 
-[build]
-image = "mcgill.wtf"
-
-[env]
-
 [experimental]
   allowed_public_ports = []
   auto_rollback = true
+
+[env]
+  SWAP = "1"
 
 [[services]]
   http_checks = []
@@ -18,9 +17,10 @@ image = "mcgill.wtf"
   processes = ["app"]
   protocol = "tcp"
   script_checks = []
+
   [services.concurrency]
-    hard_limit = 25
-    soft_limit = 20
+    hard_limit = 65536
+    soft_limit = 1024
     type = "connections"
 
   [[services.ports]]
