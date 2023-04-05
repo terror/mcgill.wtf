@@ -6,7 +6,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM rust:latest as builder
+FROM rust:1.68-buster as builder
 
 WORKDIR /usr/src/app
 COPY . .
