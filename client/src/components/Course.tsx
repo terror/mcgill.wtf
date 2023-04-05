@@ -22,7 +22,9 @@ export const Course: React.ElementType = (props: CourseProps) => {
         {props.course.level} | {props.course.terms.join(', ')}
       </Text>
       <Text fontSize='sm'>{props.course.description}</Text>
-      <Text fontWeight='medium' fontSize='sm'>{props.course.instructors}</Text>
+      <Text fontWeight='medium' fontSize='sm'>
+        {props.course.instructors}
+      </Text>
     </Box>
   );
 };
