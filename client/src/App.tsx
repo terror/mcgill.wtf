@@ -47,7 +47,7 @@ const App: React.ElementType = () => {
 
   return (
     <Center padding='1em'>
-      <Stack alignItems='center' width='60%'>
+      <Stack alignItems='center'>
         <Wrap>
           <Heading as='h1' size='2xl'>
             mcgill.wtf
@@ -71,36 +71,38 @@ const App: React.ElementType = () => {
             </Text>
           ))}
         </Text>
-        <InputGroup>
-          <InputLeftElement
-            pointerEvents='none'
-            children={<SearchIcon color='gray.300' />}
-          />
-          <Input
-            placeholder='Search for a course'
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-              handleInputChange(event.target.value)
-            }
-            ref={inputRef}
-          />
-        </InputGroup>
-        <Stack alignItems='right' width='100%'>
-          {payload && (
-            <Alert status='success' borderRadius='0.5rem'>
-              <AlertIcon />
-              Found {payload.courses.length} results ({payload.time} ms)
-            </Alert>
-          )}
-          {error && (
-            <Alert status='error' borderRadius='0.5rem'>
-              <AlertIcon />
-              {error}
-            </Alert>
-          )}
-          {payload &&
-            payload.courses.map((course: CourseType, index: number) => {
-              return <Course key={index} course={course} />;
-            })}
+        <Stack width='100%' maxWidth='500px'>
+          <InputGroup>
+            <InputLeftElement
+              pointerEvents='none'
+              children={<SearchIcon color='gray.300' />}
+            />
+            <Input
+              placeholder='Search for a course'
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                handleInputChange(event.target.value)
+              }
+              ref={inputRef}
+            />
+          </InputGroup>
+          <Stack alignItems='right' width='100%'>
+            {payload && (
+              <Alert status='success' borderRadius='0.5rem'>
+                <AlertIcon />
+                Found {payload.courses.length} results ({payload.time} ms)
+              </Alert>
+            )}
+            {error && (
+              <Alert status='error' borderRadius='0.5rem'>
+                <AlertIcon />
+                {error}
+              </Alert>
+            )}
+            {payload &&
+              payload.courses.map((course: CourseType, index: number) => {
+                return <Course key={index} course={course} />;
+              })}
+          </Stack>
         </Stack>
       </Stack>
     </Center>
