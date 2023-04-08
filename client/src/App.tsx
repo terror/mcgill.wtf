@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 
 import {
   Alert,
@@ -19,7 +19,6 @@ import { Course as CourseType } from './lib/course';
 import { Course } from './components/Course';
 import { Payload } from './lib/payload';
 import { SearchIcon } from '@chakra-ui/icons';
-import { debounce } from './lib/utils';
 import { search } from './lib/search';
 
 const App: React.ElementType = () => {
@@ -27,16 +26,13 @@ const App: React.ElementType = () => {
   const [error, setError] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = useCallback(
-    debounce(async (value: string) => {
-      try {
-        setPayload(await search(value));
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'Unknown Error');
-      }
-    }, 50),
-    []
-  );
+  const handleInputChange = async (value: string) => {
+    try {
+      setPayload(await search(value));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unknown Error');
+    }
+  };
 
   const handleExampleClick = (index: number) => {
     if (inputRef.current) inputRef.current.value = examples[index];
