@@ -15,7 +15,7 @@ import {
   Wrap,
 } from '@chakra-ui/react';
 
-import { Course as CourseType } from './lib/course';
+import { Course as CourseType } from './model/Course';
 import { Course } from './components/Course';
 import { Payload } from './lib/payload';
 import { SearchIcon } from '@chakra-ui/icons';
