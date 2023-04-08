@@ -67,7 +67,7 @@ const App: React.ElementType = () => {
             </Text>
           ))}
         </Text>
-        <Stack width='100%' maxWidth='500px'>
+        <Stack width='100%' maxWidth='510px'>
           <InputGroup>
             <InputLeftElement
               pointerEvents='none'
