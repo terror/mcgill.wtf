@@ -96,7 +96,13 @@ const App: React.ElementType = () => {
             )}
             {payload &&
               payload.courses.map((course: CourseType, index: number) => {
-                return <Course key={index} course={course} />;
+                return (
+                  <Course
+                    key={index}
+                    course={course}
+                    query={inputRef?.current?.value}
+                  />
+                );
               })}
           </Stack>
         </Stack>
