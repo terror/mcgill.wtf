@@ -1,7 +1,7 @@
 ### mcgill.wtf
 
 <div>
-  <img width='100px' src='https://super-static-assets.s3.amazonaws.com/6296dc83-05b5-4ba9-bd53-80e15dc04936/images/2da96950-23a6-41d9-bf58-3b65a4ee3737.png'>
+  <img width='100px' src='https://user-images.githubusercontent.com/31192478/234092331-40c9c5d0-8a60-42ef-aab2-e2dfdda80772.png'>
 </div>
 
 **mcgill.wtf** is a fast full-text search of [McGill](https://mcgill.ca)'s
