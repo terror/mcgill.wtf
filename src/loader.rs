@@ -18,7 +18,7 @@ impl Loader {
 
     while let Some(entries) = Extractor::page(Page {
       number: page,
-      url: format!("{}/study/2022-2023/courses/search?page={}", BASE_URL, page),
+      url: format!("{}/study/2023-2024/courses/search?page={}", BASE_URL, page),
     })? {
       courses.extend(
         entries
