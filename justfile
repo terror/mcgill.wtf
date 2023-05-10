@@ -39,5 +39,9 @@ serve datasource='data.json':
 test:
   cargo test
 
+upload:
+  just download
+  aws s3 cp data.json s3://mcgill.wtf/data.json
+
 watch +COMMAND='test':
   cargo watch --clear --exec "{{COMMAND}}"

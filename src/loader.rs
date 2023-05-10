@@ -6,6 +6,12 @@ pub(crate) struct Loader {
   datasource: Option<PathBuf>,
   #[clap(long, help = "Starting page at which to start downloading courses.")]
   starting_page: Option<usize>,
+  #[clap(
+    long,
+    default_value = "2023-2024",
+    help = "McGill term for which to download courses."
+  )]
+  mcgill_term: String,
 }
 
 impl Loader {
@@ -18,7 +24,10 @@ impl Loader {
 
     while let Some(entries) = Extractor::page(Page {
       number: page,
-      url: format!("{}/study/2022-2023/courses/search?page={}", BASE_URL, page),
+      url: format!(
+        "{}/study/{}/courses/search?page={}",
+        BASE_URL, self.mcgill_term, page
+      ),
     })? {
       courses.extend(
         entries
